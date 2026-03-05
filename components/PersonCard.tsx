@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useDashboard } from "./DashboardContext";
 import DefaultAvatar from "./DefaultAvatar";
 import { FemaleIcon, MaleIcon } from "./GenderIcons";
-
+import BranchName from "./BrancheName";
 interface PersonCardProps {
   person: Person;
 }
@@ -21,7 +21,7 @@ export default function PersonCard({ person }: PersonCardProps) {
     if (gender === "female") return "bg-rose-100 text-rose-600";
     return "bg-stone-100 text-stone-600";
   };
-
+  console.log("branchId:", person.branch_id);
   return (
     <button
       onClick={() => setMemberModalId(person.id)}
@@ -131,6 +131,9 @@ export default function PersonCard({ person }: PersonCardProps) {
                   Đời thứ {person.generation}
                 </span>
               )}
+              <div>
+                <BranchName branchId={person.branch_id} />
+              </div>
             </div>
           )}
         </div>

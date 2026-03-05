@@ -3,6 +3,7 @@
 import { Gender, Person } from "@/types";
 import { createClient } from "@/utils/supabase/client";
 import { AnimatePresence, motion, Variants } from "framer-motion";
+import { BranchSelect } from "@/components/BranchSelect";
 import {
   AlertCircle,
   Briefcase,
@@ -46,6 +47,13 @@ export default function MemberForm({
   const [gender, setGender] = useState<Gender>(initialData?.gender || "male");
   const [birthYear, setBirthYear] = useState<number | "">(
     initialData?.birth_year || "",
+  );
+  const [generation, setGeneration] = useState<number | "">(
+    initialData?.generation || "",
+  );
+
+  const [branchId, setBranchId] = useState<number | "">(
+    initialData?.branch_id || "",
   );
   const [birthMonth, setBirthMonth] = useState<number | "">(
     initialData?.birth_month || "",
@@ -174,6 +182,11 @@ export default function MemberForm({
         is_deceased: isDeceased,
         is_in_law: isInLaw,
         birth_order: birthOrder === "" ? null : Number(birthOrder),
+
+        // 👉 Thêm 2 dòng này
+        generation: generation === "" ? null : Number(generation),
+        branch_id: branchId === "" ? null : Number(branchId),
+
         other_names: otherNames || null,
         avatar_url: finalAvatarUrl || null,
         note: note || null,
@@ -354,6 +367,32 @@ export default function MemberForm({
             />
             <p className="mt-1.5 text-xs text-stone-400 flex items-center gap-1">
               <span>💡</span> Để trống nếu không rõ hoặc không có anh/chị/em
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-semibold text-stone-700 whitespace-nowrap">
+              Thuộc chi / nhánh
+            </label>
+
+            <BranchSelect value={branchId} onChange={setBranchId} />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-stone-700 mb-1.5">
+              Đời thứ
+            </label>
+            <input
+              type="number"
+              r
+              min="1"
+              value={generation}
+              onChange={(e) =>
+                setGeneration(e.target.value ? Number(e.target.value) : "")
+              }
+              className={inputClasses}
+            />
+            <p className="mt-1.5 text-xs text-stone-400 flex items-center gap-1">
+              <span>💡</span> Ví dụ: 1 là đời thủy tổ, 2 là con của thủy tổ...
             </p>
           </div>
 

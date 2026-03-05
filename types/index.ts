@@ -46,9 +46,12 @@ export interface Person {
   is_in_law: boolean;
   birth_order: number | null;
   generation: number | null;
+  branch_id: number | null;
   other_names: string | null;
 }
-
+export interface PersonCard extends Person {
+  branches?: BranchOption | null;
+}
 export interface Relationship {
   id: string;
   type: RelationshipType;
@@ -64,4 +67,9 @@ export interface PersonWithDetails extends Person {
   spouses?: Person[];
   children?: Person[];
   parents?: Person[];
+}
+
+export interface BranchOption {
+  id: number
+  name: string
 }

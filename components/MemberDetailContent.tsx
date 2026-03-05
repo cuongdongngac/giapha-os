@@ -3,6 +3,7 @@
 import DefaultAvatar from "@/components/DefaultAvatar";
 import RelationshipManager from "@/components/RelationshipManager";
 import { Person } from "@/types";
+import BranchName from "./BrancheName";
 import {
   calculateAge,
   formatDisplayDate,
@@ -161,8 +162,9 @@ export default function MemberDetailContent({
                 </span>
               )}
               {person.generation != null && (
-                <span className="text-[10px] sm:text-xs font-sans font-bold rounded-md px-2 py-0.5 whitespace-nowrap shadow-xs border text-emerald-700 bg-emerald-50/60 border-emerald-200/60 uppercase tracking-wider">
-                  Đời thứ {person.generation}
+                <span className="flex items-center gap-2 text-[10px] sm:text-xs font-sans font-bold rounded-md px-2 py-0.5 whitespace-nowrap shadow-xs border text-emerald-700 bg-emerald-50/60 border-emerald-200/60 uppercase tracking-wider">
+                  <span>Đời thứ {person.generation}</span>
+                  <BranchName branchId={person.branch_id} />
                 </span>
               )}
             </h1>
@@ -189,16 +191,28 @@ export default function MemberDetailContent({
                     </h3>
                   </div>
                   <div className="flex items-center gap-1">
-                    {person.birth_year && getZodiacAnimal(person.birth_year, person.birth_month, person.birth_day) && (
-                      <span className="text-[10px] font-sans font-bold text-rose-700 bg-rose-50 border border-rose-200/60 rounded-md px-1.5 py-0.5 whitespace-nowrap shadow-xs tracking-wider">
-                        Tuổi {getZodiacAnimal(person.birth_year, person.birth_month, person.birth_day)}
-                      </span>
-                    )}
-                    {person.birth_day && person.birth_month && getZodiacSign(person.birth_day, person.birth_month) && (
-                      <span className="text-[10px] font-sans font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/60 rounded-md px-1.5 py-0.5 whitespace-nowrap shadow-xs tracking-wider">
-                        {getZodiacSign(person.birth_day, person.birth_month)}
-                      </span>
-                    )}
+                    {person.birth_year &&
+                      getZodiacAnimal(
+                        person.birth_year,
+                        person.birth_month,
+                        person.birth_day,
+                      ) && (
+                        <span className="text-[10px] font-sans font-bold text-rose-700 bg-rose-50 border border-rose-200/60 rounded-md px-1.5 py-0.5 whitespace-nowrap shadow-xs tracking-wider">
+                          Tuổi{" "}
+                          {getZodiacAnimal(
+                            person.birth_year,
+                            person.birth_month,
+                            person.birth_day,
+                          )}
+                        </span>
+                      )}
+                    {person.birth_day &&
+                      person.birth_month &&
+                      getZodiacSign(person.birth_day, person.birth_month) && (
+                        <span className="text-[10px] font-sans font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/60 rounded-md px-1.5 py-0.5 whitespace-nowrap shadow-xs tracking-wider">
+                          {getZodiacSign(person.birth_day, person.birth_month)}
+                        </span>
+                      )}
                   </div>
                 </div>
                 <div className="space-y-1.5 pl-4 border-l-2 border-stone-100">
