@@ -184,8 +184,8 @@ export default function MemberForm({
         birth_order: birthOrder === "" ? null : Number(birthOrder),
 
         // 👉 Thêm 2 dòng này
-        generation: generation === "" ? null : Number(generation),
-        branch_id: branchId === "" ? null : Number(branchId),
+        generation: generation,
+        branch_id: branchId,
 
         other_names: otherNames || null,
         avatar_url: finalAvatarUrl || null,
