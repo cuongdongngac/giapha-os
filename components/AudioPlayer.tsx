@@ -1,8 +1,13 @@
 'use client'
 import { useRef, useState } from "react"
 
-export default function AudioPlayer({ src, title = "Nghe giới thiệu" }) {
-  const audioRef = useRef(null)
+type AudioPlayerProps = {
+  src: string
+  title?: string
+}
+
+export default function AudioPlayer({ src, title = "Nghe giới thiệu" }: AudioPlayerProps) {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   const [playing, setPlaying] = useState(false)
 
   const togglePlay = () => {
