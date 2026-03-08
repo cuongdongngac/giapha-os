@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import MiniVideoPlayer from "./MiniVideoPlayer";
+import HoPhamAudio from "./HoPhamAudio";
 type Section = {
   title: string;
   content?: string[];
@@ -86,9 +87,15 @@ export default function Introduction() {
         className="text-4xl font-bold text-center"
       >
         Họ Phạm Đông Ngạc
+        <HoPhamAudio
+          title="Nghe đọc"
+          src="https://mediaserver.huph.edu.vn/vod/nas1videos/phahe/hopham.mp3"
+        />
       </motion.h1>
 
       {/* Opening */}
+
+      
       <section className="bg-gray-50 border rounded-2xl p-6 space-y-4">
         <p>
           Trải qua nhiều thế kỷ, dòng họ Phạm tại làng Đông Ngạc đã góp phần
@@ -104,10 +111,17 @@ export default function Introduction() {
           qua các thời kỳ lịch sử.
         </p>
       </section>
+
+    
       <MiniVideoPlayer
         src="https://mediaserver.huph.edu.vn/vod/nas1videos/phahe/dongngac.mp4"
         title="Video giới thiệu"
       />
+
+      
+
+      
+
       {/* Sections */}
       {sections.map((section, index) => (
         <motion.section
