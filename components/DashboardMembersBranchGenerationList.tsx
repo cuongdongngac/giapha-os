@@ -76,6 +76,24 @@ export default function DashboardMembersBranchGenerationList({
       // If not provided, treat as "all"
       setGeneration("");
     }
+
+    const rawSort = searchParams.get("sort");
+    if (rawSort != null && rawSort !== "") {
+      // Validate sort option
+      const validSorts: SortKey[] = [
+        "birth_asc",
+        "birth_desc",
+        "name_asc",
+        "name_desc",
+        "generation_asc",
+        "generation_desc",
+        "updated_asc",
+        "updated_desc",
+      ];
+      if (validSorts.includes(rawSort as SortKey)) {
+        setSortOption(rawSort as SortKey);
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
@@ -125,7 +143,9 @@ export default function DashboardMembersBranchGenerationList({
         generation === "" ? true : p.generation === generation;
 
       const matchesBranch =
-        branchIdSet == null ? true : !!p.branch_id && branchIdSet.has(p.branch_id);
+        branchIdSet == null
+          ? true
+          : !!p.branch_id && branchIdSet.has(p.branch_id);
 
       return matchesSearch && matchesGeneration && matchesBranch;
     });
@@ -142,9 +162,9 @@ export default function DashboardMembersBranchGenerationList({
         case "birth_desc":
           return (b.birth_year || 0) - (a.birth_year || 0);
         case "generation_asc":
-          return (a.generation || 0) - (b.generation || 0);
+          return (a.generation ?? 999) - (b.generation ?? 999);
         case "generation_desc":
-          return (b.generation || 0) - (a.generation || 0);
+          return (b.generation ?? 999) - (a.generation ?? 999);
         case "updated_asc":
           return (
             new Date(a.updated_at || 0).getTime() -
@@ -200,7 +220,9 @@ export default function DashboardMembersBranchGenerationList({
                   disabled={branchesLoading}
                 >
                   <option value="">
-                    {branchesLoading ? "Đang tải chi..." : "Tất cả chi (gồm chi con)"}
+                    {branchesLoading
+                      ? "Đang tải chi..."
+                      : "Tất cả chi (gồm chi con)"}
                   </option>
                   {branches.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -301,4 +323,3 @@ export default function DashboardMembersBranchGenerationList({
     </>
   );
 }
-

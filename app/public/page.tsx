@@ -24,8 +24,8 @@ export default function PublicPage() {
         // Try to login as guest with provided credentials
         const { data: authData, error: signInError } =
           await supabase.auth.signInWithPassword({
-            email: "guest@hophamdongngac.org",
-            password: "hophamdongngac@123",
+            email: process.env.NEXT_PUBLIC_GUEST_EMAIL || "",
+            password: process.env.NEXT_PUBLIC_GUEST_PASS || "",
           });
 
         if (signInError) {

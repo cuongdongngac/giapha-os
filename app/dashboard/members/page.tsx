@@ -76,7 +76,8 @@ export default async function MembersPage({
     );
   }
   if (branchId != null) personsQuery = personsQuery.eq("branch_id", branchId);
-  if (generation != null) personsQuery = personsQuery.eq("generation", generation);
+  if (generation != null)
+    personsQuery = personsQuery.eq("generation", generation);
 
   switch (sort) {
     case "name_asc":
@@ -94,13 +95,13 @@ export default async function MembersPage({
     case "generation_asc":
       personsQuery = personsQuery.order("generation", {
         ascending: true,
-        nullsFirst: false,
+        nullsFirst: true,
       });
       break;
     case "generation_desc":
       personsQuery = personsQuery.order("generation", {
         ascending: false,
-        nullsFirst: false,
+        nullsFirst: true,
       });
       break;
     case "updated_asc":
@@ -226,4 +227,3 @@ export default async function MembersPage({
     </DashboardProvider>
   );
 }
-
