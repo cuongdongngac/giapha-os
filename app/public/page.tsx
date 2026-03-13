@@ -21,11 +21,29 @@ export default function PublicPage() {
   useEffect(() => {
     const autoLoginAsGuest = async () => {
       try {
+        // Check if environment variables are available
+        const guestEmail =
+          process.env.NEXT_PUBLIC_GUEST_EMAIL || "guest@hophamdongngac.org";
+        const guestPass =
+          process.env.NEXT_PUBLIC_GUEST_PASS || "hophamdongngac@123";
+
+        console.log("Environment variables check:", {
+          email: guestEmail ? "SET" : "MISSING",
+          pass: guestPass ? "SET" : "MISSING",
+          emailValue: guestEmail ? guestEmail.substring(0, 3) + "..." : "EMPTY",
+          rawEmail: process.env.NEXT_PUBLIC_GUEST_EMAIL,
+          rawPass: process.env.NEXT_PUBLIC_GUEST_PASS ? "***" : "undefined",
+        });
+
+        if (!guestEmail || !guestPass) {
+          throw new Error("Guest credentials not configured properly");
+        }
+
         // Try to login as guest with provided credentials
         const { data: authData, error: signInError } =
           await supabase.auth.signInWithPassword({
-            email: process.env.NEXT_PUBLIC_GUEST_EMAIL || "",
-            password: process.env.NEXT_PUBLIC_GUEST_PASS || "",
+            email: guestEmail,
+            password: guestPass,
           });
 
         if (signInError) {
