@@ -36,6 +36,18 @@ export default function BranchesTable() {
   }>({});
   const [saving, setSaving] = useState<{ [key: number]: boolean }>({});
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [newBranchForm, setNewBranchForm] = useState<Partial<BranchRow>>({
+    id: 0,
+    name: "",
+    code: "",
+    parent_id: null,
+    description: "",
+    founder: "",
+    church: "",
+  });
+  const [savingNew, setSavingNew] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const supabase = createClient();
 
@@ -172,6 +184,135 @@ export default function BranchesTable() {
     }));
   };
 
+  const handleNewBranchChange = (
+    field: keyof BranchRow,
+    value: string | number | null,
+  ) => {
+    setNewBranchForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleAddNewBranch = async () => {
+    if (!newBranchForm.name?.trim()) {
+      alert("Vui lòng nhập tên chi họ!");
+      return;
+    }
+
+    if (!newBranchForm.id || newBranchForm.id <= 0) {
+      alert("Vui lòng nhập ID chi họ!");
+      return;
+    }
+
+    setSavingNew(true);
+    try {
+      const { data, error } = await supabase
+        .from("branches")
+        .insert({
+          id: newBranchForm.id,
+          name: newBranchForm.name.trim(),
+          code: newBranchForm.code?.trim() || null,
+          parent_id: newBranchForm.parent_id || null,
+          description: newBranchForm.description?.trim() || null,
+          founder: newBranchForm.founder?.trim() || null,
+          church: newBranchForm.church?.trim() || null,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Database error:", error);
+        throw error;
+      }
+
+      console.log("Inserted branch:", data);
+
+      // Add to local state with proper type checking
+      if (data && typeof data === "object" && "id" in data) {
+        setBranches((prev) => [...prev, data as BranchRow]);
+      } else {
+        console.error("Invalid data structure returned:", data);
+        throw new Error("Invalid data returned from database");
+      }
+
+      // Reset form
+      setNewBranchForm({
+        id: 0,
+        name: "",
+        code: "",
+        parent_id: null,
+        description: "",
+        founder: "",
+        church: "",
+      });
+      setIsAddingNew(false);
+    } catch (error) {
+      console.error("Error adding branch:", error);
+      alert("Không thể thêm chi họ mới! Lỗi: " + (error as Error).message);
+    } finally {
+      setSavingNew(false);
+    }
+  };
+
+  const handleDeleteBranch = async (branchId: number, branchName: string) => {
+    if (!confirm(`Bạn có chắc chắn muốn xóa chi họ "${branchName}"?`)) {
+      return;
+    }
+
+    setDeletingId(branchId);
+    try {
+      // Check if branch has children
+      const { data: childrenBranches } = await supabase
+        .from("branches")
+        .select("id, name")
+        .eq("parent_id", branchId);
+
+      if (childrenBranches && childrenBranches.length > 0) {
+        const childrenNames = childrenBranches.map((b) => b.name).join(", ");
+        alert(
+          `Không thể xóa chi họ này vì có các chi con: ${childrenNames}. Vui lòng xóa các chi con trước.`,
+        );
+        return;
+      }
+
+      // Check if branch has persons
+      const { data: persons } = await supabase
+        .from("persons")
+        .select("id, full_name")
+        .eq("branch_id", branchId)
+        .limit(1);
+
+      if (persons && persons.length > 0) {
+        alert(
+          `Không thể xóa chi họ này vì có thành viên trong chi. Vui lòng chuyển thành viên sang chi khác trước.`,
+        );
+        return;
+      }
+
+      // Delete branch
+      const { error } = await supabase
+        .from("branches")
+        .delete()
+        .eq("id", branchId);
+
+      if (error) {
+        console.error("Delete error:", error);
+        throw error;
+      }
+
+      // Remove from local state
+      setBranches((prev) => prev.filter((branch) => branch.id !== branchId));
+
+      alert(`Đã xóa chi họ "${branchName}" thành công!`);
+    } catch (error) {
+      console.error("Error deleting branch:", error);
+      alert("Không thể xóa chi họ! Lỗi: " + (error as Error).message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-12">
@@ -204,8 +345,191 @@ export default function BranchesTable() {
             <Filter className="w-4 h-4" />
             <span>Bộ lọc</span>
           </button>
+          {isAdmin && (
+            <button
+              onClick={() => setIsAddingNew(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Users className="w-4 h-4" />
+              <span>Thêm Chi Họ</span>
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Add New Branch Form */}
+      {isAddingNew && (
+        <div className="p-6 bg-blue-50 border-b border-blue-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-blue-900">
+              Thêm Chi Họ Mới
+            </h3>
+            <button
+              onClick={() => {
+                setIsAddingNew(false);
+                setNewBranchForm({
+                  id: 0,
+                  name: "",
+                  code: "",
+                  parent_id: null,
+                  description: "",
+                  founder: "",
+                  church: "",
+                });
+              }}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ID Chi Họ *
+              </label>
+              <input
+                type="number"
+                value={newBranchForm.id || ""}
+                onChange={(e) =>
+                  handleNewBranchChange(
+                    "id",
+                    e.target.value ? Number(e.target.value) : 0,
+                  )
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Nhập ID chi họ..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tên chi họ *
+              </label>
+              <input
+                type="text"
+                value={newBranchForm.name || ""}
+                onChange={(e) => handleNewBranchChange("name", e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Nhập tên chi họ..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Mã chi
+              </label>
+              <input
+                type="text"
+                value={newBranchForm.code || ""}
+                onChange={(e) => handleNewBranchChange("code", e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Nhập mã chi (tuỳ chọn)..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Chi họ cha
+              </label>
+              <select
+                value={newBranchForm.parent_id || ""}
+                onChange={(e) =>
+                  handleNewBranchChange(
+                    "parent_id",
+                    e.target.value ? Number(e.target.value) : null,
+                  )
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Không có</option>
+                {branches.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name} {branch.code && `(${branch.code})`}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Người sáng lập
+              </label>
+              <input
+                type="text"
+                value={newBranchForm.founder || ""}
+                onChange={(e) =>
+                  handleNewBranchChange("founder", e.target.value)
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Nhập tên người sáng lập..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nhà thờ họ
+              </label>
+              <input
+                type="text"
+                value={newBranchForm.church || ""}
+                onChange={(e) =>
+                  handleNewBranchChange("church", e.target.value)
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Nhập tên nhà thờ họ..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Mô tả
+              </label>
+              <input
+                type="text"
+                value={newBranchForm.description || ""}
+                onChange={(e) =>
+                  handleNewBranchChange("description", e.target.value)
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Nhập mô tả..."
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={handleAddNewBranch}
+              disabled={
+                savingNew ||
+                !newBranchForm.name?.trim() ||
+                !newBranchForm.id ||
+                newBranchForm.id <= 0
+              }
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {savingNew ? "Đang lưu..." : "Lưu"}
+            </button>
+            <button
+              onClick={() => {
+                setIsAddingNew(false);
+                setNewBranchForm({
+                  id: 0,
+                  name: "",
+                  code: "",
+                  parent_id: null,
+                  description: "",
+                  founder: "",
+                  church: "",
+                });
+              }}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Hủy
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div className="overflow-x-auto">
@@ -393,6 +717,34 @@ export default function BranchesTable() {
                               title="Chỉnh sửa chi họ"
                             >
                               <Edit2 className="w-4 h-4" />
+                            </button>
+                          )}
+                          {isAdmin && (
+                            <button
+                              onClick={() =>
+                                handleDeleteBranch(branch.id, branch.name)
+                              }
+                              disabled={deletingId === branch.id}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Xóa chi họ"
+                            >
+                              {deletingId === branch.id ? (
+                                <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                              ) : (
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                  />
+                                </svg>
+                              )}
                             </button>
                           )}
                           <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">

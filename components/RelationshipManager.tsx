@@ -81,6 +81,9 @@ export default function RelationshipManager({
   const [newSpouseName, setNewSpouseName] = useState("");
   const [newSpouseBirthYear, setNewSpouseBirthYear] = useState("");
   const [newSpouseNote, setNewSpouseNote] = useState("");
+  const [currentPersonGeneration, setCurrentPersonGeneration] = useState<
+    number | null
+  >(null);
 
   // Get appropriate note to display based on relationship type and gender
   const getDisplayNote = (rel: EnrichedRelationship): string | null => {
@@ -108,6 +111,17 @@ export default function RelationshipManager({
   // Fetch relationships
   const fetchRelationships = useCallback(async () => {
     try {
+      // Get current person's generation
+      const { data: currentPerson } = await supabase
+        .from("persons")
+        .select("generation")
+        .eq("id", personId)
+        .single();
+
+      if (currentPerson) {
+        setCurrentPersonGeneration(currentPerson.generation);
+      }
+
       // Get all relationships where this person involved
       // This is a bit complex because we need to check both a and b columns
       const { data: relsA, error: errA } = await supabase
@@ -329,9 +343,13 @@ export default function RelationshipManager({
           full_name: string;
           gender: "male" | "female" | "other";
           birth_year?: number;
+          generation?: number;
         } = {
           full_name: child.name.trim(),
           gender: child.gender,
+          generation: currentPersonGeneration
+            ? currentPersonGeneration + 1
+            : undefined,
         };
         if (child.birthYear.trim() !== "") {
           const year = parseInt(child.birthYear);
@@ -416,9 +434,11 @@ export default function RelationshipManager({
         full_name: string;
         gender: "male" | "female" | "other";
         birth_year?: number;
+        generation?: number;
       } = {
         full_name: newSpouseName.trim(),
         gender: newSpouseGender,
+        generation: currentPersonGeneration || undefined,
       };
 
       if (newSpouseBirthYear.trim() !== "") {
@@ -897,6 +917,15 @@ export default function RelationshipManager({
                       setBulkChildren(newBulk);
                     }}
                     className="flex-1 bg-white text-stone-900 placeholder-stone-400 text-sm rounded-md border-stone-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-2 border w-24"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Thế hệ"
+                    value={
+                      child.birthYear ? (currentPersonGeneration || 0) + 1 : ""
+                    }
+                    readOnly
+                    className="flex-1 bg-stone-100 text-stone-600 text-sm rounded-md border-stone-300 p-2 border w-20"
                   />
                   <button
                     onClick={() => {
