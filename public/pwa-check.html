@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Install Check</title>
+    <link rel="manifest" href="/manifest-debug.json">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .check { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn:disabled { background: #6c757d; cursor: not-allowed; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 PWA Install Check</h1>
+    
+    <div class="check">
+        <h2>📋 PWA Install Requirements</h2>
+        <div id="requirements">Checking...</div>
+    </div>
+    
+    <div class="check">
+        <h2>🚀 Install Prompt Status</h2>
+        <div id="install-status">Checking...</div>
+        <button id="install-btn" class="btn" onclick="triggerInstall()" disabled>📱 Install App</button>
+    </div>
+    
+    <div class="check">
+        <h2>📱 Device & Browser Info</h2>
+        <div id="device-info">Checking...</div>
+    </div>
+    
+    <div class="check">
+        <h2>🔧 Service Worker Status</h2>
+        <div id="sw-status">Checking...</div>
+        <button id="sw-btn" class="btn" onclick="registerSW()">🔧 Register SW</button>
+        <button id="unsw-btn" class="btn" onclick="unregisterSW()">❌ Unregister SW</button>
+    </div>
+
+    <script>
+        let deferredPrompt = null;
+
+        // Check all PWA install requirements
+        function checkRequirements() {
+            const checks = {
+                https: location.protocol === 'https:',
+                serviceWorker: 'serviceWorker' in navigator,
+                manifest: !!document.querySelector('link[rel="manifest"]'),
+                icons: false,
+                name: false,
+                shortName: false,
+                startUrl: false,
+                display: false,
+                standalone: window.matchMedia('(display-mode: standalone)').matches,
+                beforeInstallPrompt: 'beforeinstallprompt' in window
+            };
+
+            // Check manifest content
+            fetch('/manifest-debug.json')
+                .then(response => response.json())
+                .then(manifest => {
+                    checks.icons = manifest.icons && manifest.icons.length > 0;
+                    checks.name = !!manifest.name;
+                    checks.shortName = !!manifest.short_name;
+                    checks.startUrl = !!manifest.start_url;
+                    checks.display = manifest.display === 'standalone';
+                    
+                    updateRequirements(checks);
+                })
+                .catch(error => {
+                    console.error('Manifest check failed:', error);
+                    updateRequirements(checks);
+                });
+        }
+
+        function updateRequirements(checks) {
+            const requirementsDiv = document.getElementById('requirements');
+            let html = '';
+            
+            Object.entries(checks).forEach(([key, value]) => {
+                const status = value ? '✅' : '❌';
+                const className = value ? 'success' : 'error';
+                const label = getRequirementLabel(key);
+                
+                html += `<div class="${className}">
+                    <strong>${status} ${label}</strong>: ${value ? 'PASS' : 'FAIL'}
+                </div>`;
+            });
+            
+            // Overall status
+            const allPassed = Object.values(checks).every(v => v === true);
+            html += `<div class="${allPassed ? 'success' : 'warning'}" style="margin-top: 15px;">
+                <strong>${allPassed ? '🎉 ALL REQUIREMENTS MET - PWA Ready!' : '⚠️ Some requirements missing'}</strong>
+            </div>`;
+            
+            requirementsDiv.innerHTML = html;
+        }
+
+        function getRequirementLabel(key) {
+            const labels = {
+                https: 'HTTPS',
+                serviceWorker: 'Service Worker Support',
+                manifest: 'Manifest Link',
+                icons: 'Manifest Icons',
+                name: 'App Name',
+                shortName: 'Short Name',
+                startUrl: 'Start URL',
+                display: 'Display: Standalone',
+                standalone: 'Not Already Installed',
+                beforeInstallPrompt: 'Install Prompt Support'
+            };
+            return labels[key] || key;
+        }
+
+        // Check install prompt
+        function checkInstallPrompt() {
+            const installDiv = document.getElementById('install-status');
+            const installBtn = document.getElementById('install-btn');
+            
+            if (deferredPrompt) {
+                installDiv.innerHTML = '<div class="success"><strong>✅ Install prompt available</strong></div>';
+                installBtn.disabled = false;
+            } else {
+                installDiv.innerHTML = '<div class="warning"><strong>⚠️ Install prompt not available yet</strong><br>Try visiting the main site or refreshing</div>';
+                installBtn.disabled = true;
+            }
+        }
+
+        function triggerInstall() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('✅ User accepted the install prompt');
+                    } else {
+                        console.log('❌ User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                    checkInstallPrompt();
+                });
+            }
+        }
+
+        // Device info
+        function getDeviceInfo() {
+            const deviceInfo = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                isMobile: /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+                isChrome: /Chrome/.test(navigator.userAgent) && !/Edge/.test(navigator.userAgent),
+                isAndroid: /Android/.test(navigator.userAgent),
+                isStandalone: window.matchMedia('(display-mode: standalone)').matches
+            };
+            
+            document.getElementById('device-info').innerHTML = `
+                <strong>Platform:</strong> ${deviceInfo.platform}<br>
+                <strong>Mobile:</strong> ${deviceInfo.isMobile}<br>
+                <strong>Chrome:</strong> ${deviceInfo.isChrome}<br>
+                <strong>Android:</strong> ${deviceInfo.isAndroid}<br>
+                <strong>Standalone:</strong> ${deviceInfo.isStandalone}<br>
+                <strong>User Agent:</strong> <pre>${deviceInfo.userAgent}</pre>
+            `;
+        }
+
+        // Service Worker
+        function checkServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    const swDiv = document.getElementById('sw-status');
+                    if (registrations.length > 0) {
+                        swDiv.innerHTML = `<div class="success">
+                            <strong>✅ Service Worker Registered</strong><br>
+                            <strong>Count:</strong> ${registrations.length}<br>
+                            <strong>Active:</strong> ${registrations[0].active ? 'Yes' : 'No'}
+                        </div>`;
+                    } else {
+                        swDiv.innerHTML = '<div class="warning"><strong>⚠️ No Service Worker Registered</strong></div>';
+                    }
+                });
+            } else {
+                document.getElementById('sw-status').innerHTML = '<div class="error"><strong>❌ Service Worker Not Supported</strong></div>';
+            }
+        }
+
+        function registerSW() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registered:', registration);
+                        checkServiceWorker();
+                    })
+                    .catch(error => {
+                        console.log('❌ Service Worker registration failed:', error);
+                    });
+            }
+        }
+
+        function unregisterSW() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    Promise.all(registrations.map(registration => registration.unregister()))
+                        .then(() => {
+                            console.log('✅ Service Workers unregistered');
+                            checkServiceWorker();
+                        });
+                });
+            }
+        }
+
+        // Listen for install prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('🚀 beforeinstallprompt fired!');
+            e.preventDefault();
+            deferredPrompt = e;
+            checkInstallPrompt();
+        });
+
+        // Initialize
+        window.addEventListener('load', () => {
+            checkRequirements();
+            checkInstallPrompt();
+            getDeviceInfo();
+            checkServiceWorker();
+        });
+    </script>
+</body>
+</html>
