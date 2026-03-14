@@ -1,0 +1,45 @@
+{
+  "name": "Họ Phạm Đông Ngạc",
+  "short_name": "HPĐN",
+  "description": "Ứng dụng gia phả họ Phạm Đông Ngạc",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafaf9",
+  "theme_color": "#f59e0b",
+  "scope": "/",
+  "lang": "vi",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512", 
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Xem gia phả",
+      "short_name": "Gia phả",
+      "description": "Mở trang gia phả",
+      "url": "/dashboard?view=list",
+      "icons": [
+        {
+          "src": "/icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

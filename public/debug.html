@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Debug Console</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .debug-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #dbeafe; color: #1e40af; }
+        .warning { background: #fef3c7; color: #f59e0b; }
+        .log-area {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #2563eb; }
+        .btn:disabled { background: #9ca3af; cursor: not-allowed; }
+        .clear-btn { background: #ef4444; }
+        .clear-btn:hover { background: #dc2626; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .test-btn {
+            background: #10b981;
+            margin: 10px 0;
+        }
+        .test-btn:hover { background: #059669; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 PWA Debug Console</h1>
+        
+        <div class="debug-section">
+            <h2>📱 Device Info</h2>
+            <div id="device-info" class="log-area">Đang kiểm tra...</div>
+        </div>
+
+        <div class="debug-section">
+            <h2>🌐 PWA Status</h2>
+            <div id="pwa-status" class="log-area">Đang kiểm tra...</div>
+        </div>
+
+        <div class="debug-section">
+            <h2>📋 Manifest Check</h2>
+            <div id="manifest-info" class="log-area">Đang kiểm tra...</div>
+        </div>
+
+        <div class="debug-section">
+            <h2>🔧 Service Worker</h2>
+            <div id="sw-info" class="log-area">Đang kiểm tra...</div>
+        </div>
+
+        <div class="debug-section">
+            <h2>📝 Console Logs</h2>
+            <div class="grid">
+                <button class="btn test-btn" onclick="checkPWAStatus()">🔄 Kiểm tra PWA</button>
+                <button class="btn test-btn" onclick="clearLogs()">🗑️ Xóa Logs</button>
+            </div>
+            <div id="console-logs" class="log-area">Chưa có logs...</div>
+        </div>
+
+        <div class="debug-section">
+            <h2>🚀 Actions</h2>
+            <button class="btn" onclick="testInstallPrompt()">📱 Test Install Prompt</button>
+            <button class="btn" onclick="registerSW()">🔧 Đăng ký SW</button>
+            <button class="btn clear-btn" onclick="unregisterSW()">❌ Hủy SW</button>
+        </div>
+    </div>
+
+    <script>
+        let logs = [];
+        
+        // Log everything to our custom console
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        console.log = function(...args) {
+            const message = args.join(' ');
+            logs.push({type: 'log', message, time: new Date().toLocaleTimeString()});
+            originalLog.apply(console, args);
+            updateLogDisplay();
+        };
+        
+        console.error = function(...args) {
+            const message = args.join(' ');
+            logs.push({type: 'error', message, time: new Date().toLocaleTimeString()});
+            originalError.apply(console, args);
+            updateLogDisplay();
+        };
+        
+        console.warn = function(...args) {
+            const message = args.join(' ');
+            logs.push({type: 'warn', message, time: new Date().toLocaleTimeString()});
+            originalWarn.apply(console, args);
+            updateLogDisplay();
+        };
+
+        function updateLogDisplay() {
+            const logArea = document.getElementById('console-logs');
+            if (logArea) {
+                const recentLogs = logs.slice(-20); // Show last 20 logs
+                logArea.innerHTML = recentLogs.map(log => {
+                    const className = log.type === 'error' ? 'error' : 
+                                     log.type === 'warn' ? 'warning' : 
+                                     log.type === 'info' ? 'info' : '';
+                    return `<div style="margin-bottom: 5px;">
+                        <span style="color: #888; font-size: 11px;">[${log.time}]</span>
+                        <span class="${className}">${log.message}</span>
+                    </div>`;
+                }).join('');
+                logArea.scrollTop = logArea.scrollHeight;
+            }
+        }
+
+        function checkPWAStatus() {
+            // Device info
+            const deviceInfo = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                isMobile: /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+                isChrome: /Chrome/.test(navigator.userAgent),
+                isSafari: /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent)
+            };
+            
+            document.getElementById('device-info').innerHTML = 
+                `<strong>Platform:</strong> ${deviceInfo.platform}<br>
+                 <strong>Mobile:</strong> ${deviceInfo.isMobile}<br>
+                 <strong>Chrome:</strong> ${deviceInfo.isChrome}<br>
+                 <strong>Safari:</strong> ${deviceInfo.isSafari}<br>
+                 <strong>User Agent:</strong> ${deviceInfo.userAgent.substring(0, 100)}...`;
+
+            // PWA status
+            const pwaStatus = {
+                isStandalone: window.matchMedia('(display-mode: standalone)').matches,
+                isInWebApp: window.navigator.standalone === true,
+                serviceWorkerSupported: 'serviceWorker' in navigator,
+                manifestSupported: 'manifest' in document
+            };
+            
+            document.getElementById('pwa-status').innerHTML = 
+                `<strong>Standalone:</strong> ${pwaStatus.isStandalone}<br>
+                 <strong>Web App:</strong> ${pwaStatus.isInWebApp}<br>
+                 <strong>SW Support:</strong> ${pwaStatus.serviceWorkerSupported}<br>
+                 <strong>Manifest:</strong> ${pwaStatus.manifestSupported}`;
+
+            // Manifest check
+            fetch('/manifest-debug.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(manifest => {
+                    const manifestInfo = {
+                        loaded: true,
+                        name: manifest.name,
+                        shortName: manifest.short_name,
+                        icons: manifest.icons ? manifest.icons.length : 0,
+                        shortcuts: manifest.shortcuts ? manifest.shortcuts.length : 0
+                    };
+                    
+                    document.getElementById('manifest-info').innerHTML = 
+                        `<strong>✅ Loaded:</strong> ${manifestInfo.loaded}<br>
+                         <strong>Name:</strong> ${manifestInfo.name}<br>
+                         <strong>Short Name:</strong> ${manifestInfo.shortName}<br>
+                         <strong>Icons:</strong> ${manifestInfo.icons}<br>
+                         <strong>Shortcuts:</strong> ${manifestInfo.shortcuts}<br>
+                         <strong>JSON:</strong> <pre style="font-size: 10px;">${JSON.stringify(manifest, null, 2)}</pre>`;
+                })
+                .catch(error => {
+                    document.getElementById('manifest-info').innerHTML = 
+                        `<strong>❌ Error:</strong> ${error.message}`;
+                });
+
+            // Service Worker check
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    const swInfo = {
+                        registered: registrations.length > 0,
+                        count: registrations.length,
+                        active: registrations[0] ? registrations[0].active : null
+                    };
+                    
+                    document.getElementById('sw-info').innerHTML = 
+                        `<strong>Registered:</strong> ${swInfo.registered}<br>
+                         <strong>Count:</strong> ${swInfo.count}<br>
+                         <strong>Active:</strong> ${swInfo.active ? 'Yes' : 'No'}<br>
+                         <strong>Details:</strong> <pre style="font-size: 10px;">${JSON.stringify(registrations, null, 2)}</pre>`;
+                });
+            } else {
+                document.getElementById('sw-info').innerHTML = '<strong>❌ Not Supported</strong>';
+            }
+        }
+
+        function testInstallPrompt() {
+            console.log('🚀 Testing install prompt...');
+            if ('beforeinstallprompt' in window) {
+                console.log('✅ beforeinstallprompt event supported');
+            } else {
+                console.log('❌ beforeinstallprompt event NOT supported');
+            }
+            
+            // Trigger install prompt if available
+            if (window.deferredPrompt) {
+                window.deferredPrompt.prompt();
+                console.log('📱 Install prompt triggered');
+            } else {
+                console.log('❌ No deferred prompt available');
+            }
+        }
+
+        function registerSW() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registered successfully:', registration);
+                    })
+                    .catch(error => {
+                        console.log('❌ Service Worker registration failed:', error);
+                    });
+            } else {
+                console.log('❌ Service Worker not supported');
+            }
+        }
+
+        function unregisterSW() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    Promise.all(registrations.map(registration => registration.unregister()))
+                        .then(() => {
+                            console.log('✅ All Service Workers unregistered');
+                        });
+                });
+            }
+        }
+
+        function clearLogs() {
+            logs = [];
+            updateLogDisplay();
+            console.log('🗑️ Logs cleared');
+        }
+
+        // Auto-check on load
+        window.addEventListener('load', () => {
+            console.log('🔍 PWA Debug Page loaded');
+            setTimeout(checkPWAStatus, 1000);
+        });
+
+        // Listen for install prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('🚀 beforeinstallprompt event fired!');
+            e.preventDefault();
+            window.deferredPrompt = e;
+        });
+    </script>
+</body>
+</html>
