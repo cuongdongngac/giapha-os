@@ -53,7 +53,6 @@ export const metadata: Metadata = {
     userScalable: false,
     viewportFit: "cover",
   },
-  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -89,6 +88,7 @@ export default function RootLayout({
           sizes="16x16"
           href="/icons/icon-16x16.png"
         />
+        <link rel="manifest" href="/manifest.json" crossOrigin="use-credentials" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
