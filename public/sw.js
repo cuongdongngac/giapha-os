@@ -1,9 +1,10 @@
 const CACHE_NAME = "hophamdongngac-v1";
 const urlsToCache = [
   "/",
+  "/?source=pwa",
   "/dashboard",
   "/dashboard/members",
-  "/manifest.json",
+  "/manifest.webmanifest",
   "/icons/icon-192x192.png",
   "/icons/icon-512x512.png",
 ];
