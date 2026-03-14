@@ -1,11 +1,12 @@
 import { MetadataRoute } from 'next'
 
-export default function manifest(): MetadataRoute.Manifest {
+export default function manifest(): MetadataRoute.Manifest | any {
   return {
     name: "Họ Phạm Đông Ngạc",
     short_name: "HPĐN",
     description: "Ứng dụng gia phả họ Phạm Đông Ngạc",
-    start_url: "/",
+    start_url: "/?source=pwa",
+    id: "/?source=pwa",
     display: "standalone",
     background_color: "#fafaf9",
     theme_color: "#f59e0b",
