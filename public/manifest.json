@@ -94,14 +94,14 @@
   ],
   "screenshots": [
     {
-      "src": "/screenshots/desktop-1.html",
+      "src": "/screenshots/desktop-1.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Trang chủ gia phả"
     },
     {
-      "src": "/screenshots/mobile-1.html",
+      "src": "/screenshots/mobile-1.png",
       "sizes": "375x667",
       "type": "image/png", 
       "form_factor": "narrow",
