@@ -92,24 +92,6 @@ export default function RootLayout({
           sizes="16x16"
           href="/icons/icon-16x16.png"
         />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(
-                    function(registration) {
-                      console.log('Service Worker registration successful with scope: ', registration.scope);
-                    },
-                    function(err) {
-                      console.log('Service Worker registration failed: ', err);
-                    }
-                  );
-                });
-              }
-            `,
-          }}
-        />
       </head>
       <body
         className={`${inter.variable} ${playfair.variable} font-sans antialiased relative`}
