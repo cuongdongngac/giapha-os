@@ -17,30 +17,55 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  // Only handle GET requests
+  if (event.request.method !== "GET") return;
+
+  // Handle HTML navigation requests (page loads)
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // Clone and cache the successful navigation response
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+          return response;
+        })
+        .catch(() => {
+          // If network fails, try to return the cached page
+          return caches.match(event.request).then((response) => {
+            if (response) return response;
+            // If page is not in cache, return the root cache
+            return caches.match("/");
+          });
+        })
+    );
+    return;
+  }
+
+  // Handle other requests (assets, api) with Cache First, falling back to Network
   event.respondWith(
     caches.match(event.request).then((response) => {
-      // Cache hit - return response
       if (response) {
         return response;
       }
-
-      return fetch(event.request).then((response) => {
-        // Check if valid response
-        if (!response || response.status !== 200 || response.type !== "basic") {
-          return response;
+      return fetch(event.request).then((networkResponse) => {
+        // Only cache valid responses
+        if (
+          !networkResponse ||
+          networkResponse.status !== 200 ||
+          networkResponse.type !== "basic"
+        ) {
+          return networkResponse;
         }
 
-        // IMPORTANT: Clone the response. A response is a stream
-        // and because we want the browser to consume the response
-        // as well as the cache consuming the response, we need
-        // to clone it so we have two streams.
-        const responseToCache = response.clone();
-
+        const responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseToCache);
         });
 
-        return response;
+        return networkResponse;
       });
     })
   );
