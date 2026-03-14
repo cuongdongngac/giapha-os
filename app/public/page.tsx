@@ -23,6 +23,18 @@ export default function PublicPage() {
 
   // PWA Install Prompt Handler
   useEffect(() => {
+    console.log("🔍 PWA Install Handler initialized");
+    console.log(
+      "🔍 beforeinstallprompt supported:",
+      "beforeinstallprompt" in window,
+    );
+    console.log("🔍 Service Worker supported:", "serviceWorker" in navigator);
+    console.log("🔍 HTTPS:", location.protocol === "https:");
+    console.log(
+      "🔍 Standalone:",
+      window.matchMedia("(display-mode: standalone)").matches,
+    );
+
     const handleBeforeInstallPrompt = (e: any) => {
       console.log("🚀 beforeinstallprompt fired!");
       e.preventDefault();
@@ -34,6 +46,9 @@ export default function PublicPage() {
         setShowInstallPrompt(true);
         setInstallPromptShown(true);
         sessionStorage.setItem("pwa-install-prompt-shown", "true");
+        console.log("📱 Install prompt should be visible now");
+      } else {
+        console.log("📱 Install prompt already shown in this session");
       }
     };
 
@@ -46,6 +61,14 @@ export default function PublicPage() {
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     window.addEventListener("appinstalled", handleAppInstalled);
+
+    // Check if install prompt is already available
+    setTimeout(() => {
+      if (!deferredPrompt) {
+        console.log("⚠️ No install prompt available after 2 seconds");
+        console.log('🔍 Try clicking "🔍 Test Install" button');
+      }
+    }, 2000);
 
     return () => {
       window.removeEventListener(
@@ -153,6 +176,26 @@ export default function PublicPage() {
             <p className="text-stone-600 mb-4">
               Đang đăng nhập tự động với tài khoản guest...
             </p>
+
+            {/* Manual Install Trigger (for testing) */}
+            <div className="mb-4">
+              <button
+                onClick={() => {
+                  console.log("🔍 Manual install trigger clicked");
+                  if (deferredPrompt) {
+                    handleInstallClick();
+                  } else {
+                    console.log("❌ No deferred prompt available");
+                    // Try to trigger install prompt manually
+                    const event = new Event("beforeinstallprompt");
+                    window.dispatchEvent(event);
+                  }
+                }}
+                className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full hover:bg-amber-200 transition-colors"
+              >
+                🔍 Test Install
+              </button>
+            </div>
 
             {/* PWA Install Prompt */}
             {showInstallPrompt && (
