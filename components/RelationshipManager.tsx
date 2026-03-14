@@ -344,12 +344,14 @@ export default function RelationshipManager({
           gender: "male" | "female" | "other";
           birth_year?: number;
           generation?: number;
+          branch_id?: number;
         } = {
           full_name: child.name.trim(),
           gender: child.gender,
           generation: currentPersonGeneration
             ? currentPersonGeneration + 1
             : undefined,
+          branch_id: currentPersonBranchId || undefined,
         };
         if (child.birthYear.trim() !== "") {
           const year = parseInt(child.birthYear);
