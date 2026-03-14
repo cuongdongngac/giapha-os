@@ -18,7 +18,6 @@ export const metadata: Metadata = {
   },
   description:
     "GIA PHẢ HỌ PHẠM ĐÔNG NGẠC - Nền tảng gia phả hiện đại & bảo mật. Gìn giữ và lưu truyền những giá trị, cội nguồn và truyền thống tốt đẹp của dòng họ cho các thế hệ mai sau.",
-  manifest: "/manifest-debug.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -89,50 +88,11 @@ export default function RootLayout({
           sizes="16x16"
           href="/icons/icon-16x16.png"
         />
-        <link rel="manifest" href="/manifest-debug.json" />
-        <script>
-          console.log('🔍 Manual manifest link added'); console.log('🔍 Manifest
-          URL:', '/manifest-debug.json');
-        </script>
       </head>
       <body
         className={`${inter.variable} ${playfair.variable} font-sans antialiased relative`}
       >
         {children}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              console.log('🔍 PWA Debug: Starting service worker registration...');
-              
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('✅ SW registered: ', registration);
-                      console.log('🔍 SW scope: ', registration.scope);
-                      console.log('🔍 SW active: ', registration.active);
-                    })
-                    .catch(function(registrationError) {
-                      console.log('❌ SW registration failed: ', registrationError);
-                    });
-                });
-              } else {
-                console.log('❌ Service Worker not supported');
-              }
-              
-              // Debug manifest loading
-              fetch('/manifest-debug.json')
-                .then(response => response.json())
-                .then(manifest => {
-                  console.log('✅ Manifest loaded:', manifest);
-                  console.log('🔍 Manifest icons:', manifest.icons);
-                })
-                .catch(error => {
-                  console.log('❌ Manifest loading failed:', error);
-                });
-            `,
-          }}
-        />
       </body>
     </html>
   );
