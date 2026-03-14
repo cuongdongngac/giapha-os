@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="152" height="152" viewBox="0 0 152 152" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient152" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d97706;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fbbf24;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow152" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="3" stdDeviation="7" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background rounded rectangle -->
+  <rect x="0" y="0" width="152" height="152" rx="30" ry="30" fill="url(#bgGradient152)" filter="url(#shadow152)"/>
+  
+  <!-- Shine effect -->
+  <path d="M 0 38 Q 76 19 152 38 L 152 114 Q 76 133 0 114 Z" fill="rgba(255,255,255,0.1)"/>
+  
+  <!-- Text ĐN -->
+  <text x="76" y="83" font-family="Arial, sans-serif" font-size="53" font-weight="bold" fill="white" text-anchor="middle">
+    ĐN
+  </text>
+</svg>

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   },
   description:
     "GIA PHẢ HỌ PHẠM ĐÔNG NGẠC - Nền tảng gia phả hiện đại & bảo mật. Gìn giữ và lưu truyền những giá trị, cội nguồn và truyền thống tốt đẹp của dòng họ cho các thế hệ mai sau.",
-  manifest: "/manifest.json",
+  // manifest: "/manifest.json", // Comment out until icons ready
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -89,7 +89,7 @@ export default function RootLayout({
           sizes="16x16"
           href="/icons/icon-16x16.png"
         />
-        <link rel="manifest" href="/manifest.json" />
+        {/* <link rel="manifest" href="/manifest.json" /> */}
       </head>
       <body
         className={`${inter.variable} ${playfair.variable} font-sans antialiased relative`}
