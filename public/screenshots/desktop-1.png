@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Screenshot 1280x720</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #fafaf9;
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .screenshot-container {
+            width: 1280px;
+            height: 720px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .header {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .content {
+            text-align: center;
+        }
+        .title {
+            font-size: 24px;
+            color: #1f2937;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .subtitle {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .demo-item {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="screenshot-container">
+        <div class="header">
+            <strong>HỌ PHẠM ĐÔNG NGẠC</strong>
+        </div>
+        <div class="content">
+            <div class="title">Gia Phả Điện Tử</div>
+            <div class="subtitle">Nền tảng gia phả hiện đại</div>
+            <div class="demo-grid">
+                <div class="demo-item">👤 Thành viên</div>
+                <div class="demo-item">🌳 Chi họ</div>
+                <div class="demo-item">📜 Thế hệ</div>
+                <div class="demo-item">🔍 Tìm kiếm</div>
+                <div class="demo-item">📱 Mobile</div>
+                <div class="demo-item">☁️ Cloud</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
