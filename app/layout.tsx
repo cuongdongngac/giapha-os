@@ -53,6 +53,8 @@ export const metadata: Metadata = {
     userScalable: false,
     viewportFit: "cover",
   },
+  // Conditional manifest based on device (handled in component)
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -60,6 +62,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Device detection for PWA features
+  const isIOS = () => {
+    return (
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+    );
+  };
+
+  const isAndroid = () => {
+    return /Android/.test(navigator.userAgent);
+  };
+
+  const shouldLoadPWA = isIOS(); // Only load PWA features on iOS
+
   return (
     <html lang="vi">
       <head>
@@ -88,6 +104,42 @@ export default function RootLayout({
           sizes="16x16"
           href="/icons/icon-16x16.png"
         />
+
+        {/* Conditional PWA loading based on device */}
+        {shouldLoadPWA && (
+          <>
+            <link rel="manifest" href="/manifest.json" />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                  console.log('🍎 iOS detected - Loading PWA features');
+                  console.log('📱 Device info:', {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    isIOS: ${isIOS()},
+                    isAndroid: ${isAndroid()}
+                  });
+                `,
+              }}
+            />
+          </>
+        )}
+
+        {!shouldLoadPWA && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                console.log('🤖 Android/Desktop detected - Skipping PWA features');
+                console.log('📱 Device info:', {
+                  userAgent: navigator.userAgent,
+                  platform: navigator.platform,
+                  isIOS: ${isIOS()},
+                  isAndroid: ${isAndroid()}
+                });
+              `,
+            }}
+          />
+        )}
       </head>
       <body
         className={`${inter.variable} ${playfair.variable} font-sans antialiased relative`}
