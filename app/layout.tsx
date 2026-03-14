@@ -90,6 +90,10 @@ export default function RootLayout({
           href="/icons/icon-16x16.png"
         />
         <link rel="manifest" href="/manifest-debug.json" />
+        <script>
+          console.log('🔍 Manual manifest link added'); console.log('🔍 Manifest
+          URL:', '/manifest-debug.json');
+        </script>
       </head>
       <body
         className={`${inter.variable} ${playfair.variable} font-sans antialiased relative`}
