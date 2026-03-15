@@ -239,10 +239,11 @@ export default function RelationshipManager({
         return;
       }
 
+      // Search in both full_name and other_names
       const { data } = await supabase
         .from("persons")
         .select("*")
-        .ilike("full_name", `%${searchTerm}%`)
+        .or(`full_name.ilike.%${searchTerm}%,other_names.ilike.%${searchTerm}%`)
         .neq("id", personId) // Exclude self
         .limit(5);
 
