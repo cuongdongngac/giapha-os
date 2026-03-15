@@ -8,16 +8,26 @@ import {
   Download,
   FileImage,
   FileText,
+  Globe,
   Loader2,
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useDashboard } from "./DashboardContext";
+import { generateInteractiveHTML, downloadHTMLFile } from "@/utils/htmlExport";
 
-export default function ExportButton() {
+export default function ExportButton({
+  persons,
+  relationships,
+}: {
+  persons: any[];
+  relationships: any[];
+}) {
   const [isExporting, setIsExporting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { view, rootId } = useDashboard();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -29,11 +39,39 @@ export default function ExportButton() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleExport = async (format: "png" | "pdf") => {
+  const handleExport = async (format: "png" | "pdf" | "html") => {
     try {
       setIsExporting(true);
       setShowMenu(false);
       setError(null);
+
+      if (format === "html") {
+        // HTML export - không cần capture element
+        if (!rootId) {
+          throw new Error("Vui lòng chọn gốc hiển thị trước khi xuất HTML.");
+        }
+
+        // Create persons map
+        const personsMap = new Map(persons.map((p) => [p.id, p]));
+
+        // Find roots
+        const roots = persons.filter((p) => p.id === rootId);
+
+        if (roots.length === 0) {
+          throw new Error("Không tìm thấy người gốc đã chọn.");
+        }
+
+        const html = generateInteractiveHTML({
+          personsMap,
+          relationships,
+          roots,
+          view: view as "tree" | "mindmap",
+        });
+
+        const filename = `gia-pha-${view}-${new Date().toISOString().split("T")[0]}.html`;
+        downloadHTMLFile(html, filename);
+        return;
+      }
 
       // Add a small delay to allow UI to update (close menu) before capturing
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -135,6 +173,13 @@ export default function ExportButton() {
             >
               <FileText className="size-4" />
               Lưu thành PDF
+            </button>
+            <button
+              onClick={() => handleExport("html")}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-amber-700 hover:bg-amber-50 transition-colors text-left"
+            >
+              <Globe className="size-4" />
+              Xuất ra HTML
             </button>
           </motion.div>
         )}

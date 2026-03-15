@@ -70,7 +70,7 @@ export default function NotablesList({ persons }: { persons: Person[] }) {
         </div>
         <p className="text-stone-600 max-w-2xl">
           Những thành viên nổi bật của dòng họ, có đóng góp quan trọng và được
-          ghi nhận trong lịch sử gia tộc.
+          ghi nhận trong lịch sử gia tộc. (kéo xuống để xem danh sách)
         </p>
       </div>
 
