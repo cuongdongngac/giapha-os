@@ -1,6 +1,7 @@
 "use client";
 
 import PersonCard from "@/components/PersonCard";
+import HeroImage from "@/components/HeroImage";
 import { Person } from "@/types";
 import { ArrowUpDown, Users } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -15,11 +16,7 @@ type SortKey =
   | "updated_asc"
   | "updated_desc";
 
-export default function NotablesList({
-  persons,
-}: {
-  persons: Person[];
-}) {
+export default function NotablesList({ persons }: { persons: Person[] }) {
   const [sortOption, setSortOption] = useState<SortKey>("generation_asc");
 
   // Filter only notable persons
@@ -72,9 +69,16 @@ export default function NotablesList({
           </h1>
         </div>
         <p className="text-stone-600 max-w-2xl">
-          Những thành viên nổi bật của dòng họ, có đóng góp quan trọng và được ghi nhận trong lịch sử gia tộc.
+          Những thành viên nổi bật của dòng họ, có đóng góp quan trọng và được
+          ghi nhận trong lịch sử gia tộc.
         </p>
       </div>
+
+      {/* Hero Image */}
+      <HeroImage
+        src="/assets/images/notable.png"
+        alt="Danh nhân dòng họ Phạm Đông Ngạc"
+      />
 
       {/* Sort Controls */}
       <div className="mb-8 relative">
@@ -119,7 +123,11 @@ export default function NotablesList({
         <p className="text-sm text-stone-600">
           {filteredPersons.length > 0 ? (
             <>
-              Có <span className="font-semibold text-amber-700">{filteredPersons.length}</span> danh nhân trong gia phả
+              Có{" "}
+              <span className="font-semibold text-amber-700">
+                {filteredPersons.length}
+              </span>{" "}
+              danh nhân trong gia phả
             </>
           ) : (
             <>Chưa có danh nhân nào trong gia phả</>
@@ -149,7 +157,8 @@ export default function NotablesList({
             Chưa có danh nhân
           </h3>
           <p className="text-stone-500 max-w-md mx-auto">
-            Các thành viên nổi bật sẽ được hiển thị tại đây khi được đánh dấu là danh nhân trong form chỉnh sửa thông tin.
+            Các thành viên nổi bật sẽ được hiển thị tại đây khi được đánh dấu là
+            danh nhân trong form chỉnh sửa thông tin.
           </p>
         </div>
       )}

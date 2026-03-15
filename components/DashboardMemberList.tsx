@@ -25,9 +25,12 @@ export default function DashboardMemberList({
   const [filterOption, setFilterOption] = useState("all");
 
   const filteredPersons = initialPersons.filter((person) => {
-    const matchesSearch = person.full_name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    // Search in both full_name and other_names
+    const searchTermLower = searchTerm.toLowerCase();
+    const matchesSearch =
+      person.full_name.toLowerCase().includes(searchTermLower) ||
+      (person.other_names &&
+        person.other_names.toLowerCase().includes(searchTermLower));
 
     let matchesFilter = true;
     switch (filterOption) {
