@@ -48,8 +48,11 @@ export default function PersonSelector({
 
   const filteredPersons = persons
     .filter((p) => {
-      const searchStr = `${p.full_name} ${p.birth_year || ""}`.toLowerCase();
-      return searchStr.includes(searchTerm.toLowerCase());
+      // Search in both full_name and other_names
+      const searchTermLower = searchTerm.toLowerCase();
+      const searchStr =
+        `${p.full_name} ${p.other_names || ""} ${p.birth_year || ""}`.toLowerCase();
+      return searchStr.includes(searchTermLower);
     })
     .slice(0, 20);
 
