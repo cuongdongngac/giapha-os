@@ -7,8 +7,23 @@ interface ExportData {
   view: 'tree' | 'mindmap';
 }
 
-export const generateTreeHTML = (data: ExportData) => {
+export const generateTreeHTML = async (data: ExportData) => {
   const { personsMap, relationships, roots } = data;
+
+  // Fetch branch names from database (same as BranchName component)
+  const { createClient } = await import("@/utils/supabase/client");
+  const supabase = createClient();
+  
+  const { data: branchesData, error: branchesError } = await supabase
+    .from("branches")
+    .select("id, name");
+  
+  const branchCache = new Map<number, string>();
+  if (!branchesError && branchesData) {
+    branchesData.forEach((branch) => {
+      branchCache.set(branch.id, branch.name);
+    });
+  }
 
   // Simple HTML tree với JavaScript cho interactivity
   let html = `
@@ -21,7 +36,10 @@ export const generateTreeHTML = (data: ExportData) => {
         body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f4; }
         .person { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: white; cursor: pointer; }
         .person:hover { background: #f9fafb; }
-        .generation { background: #f0f0f0; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
+        .person-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .person-info { flex: 1; }
+        .generation { background: #f0f0f0; padding: 5px 10px; border-radius: 4px; font-weight: bold; display: inline-block; margin-bottom: 5px; }
+        .branch-line { color: #666; font-size: 0.9em; margin-bottom: 5px; font-style: italic; }
         .children { margin-left: 40px; border-left: 2px solid #ccc; padding-left: 20px; }
         .children.collapsed { display: none; }
         .toggle { float: right; font-size: 18px; color: #666; }
@@ -52,14 +70,20 @@ export const generateTreeHTML = (data: ExportData) => {
       .map(r => personsMap.get(r.person_b))
       .filter(Boolean);
 
+    // Get branch name from cache (real names from branches table)
+    const branchName = person.branch_id ? branchCache.get(person.branch_id) || `Chi ${person.branch_id}` : '';
+    const generationText = person.generation ? `Đời thứ ${person.generation}` : 'N/A';
+
     let personHtml = `
     <div class="person ${person.gender}" onclick="toggleChildren(this)">
         <span class="toggle">${children.length > 0 ? '▼' : ''}</span>
-        <div class="generation">Thế hệ ${level + 1}</div>
-        <h3>${person.full_name}</h3>
-        <p>Sinh năm: ${person.birth_year || "N/A"}</p>
-        <p>Giới tính: ${person.gender === "female" ? "Nữ" : "Nam"}</p>
-        ${person.other_names ? `<p>Tên khác: ${person.other_names}</p>` : ""}
+        <div class="person-info">
+            <div class="generation">${branchName ? `${branchName} - ${generationText}` : generationText}</div>
+            <h3>${person.full_name}</h3>
+            <p>Sinh năm: ${person.birth_year || "N/A"}</p>
+            <p>Giới tính: ${person.gender === "female" ? "Nữ" : "Nam"}</p>
+            ${person.other_names ? `<p>Tên khác: ${person.other_names}</p>` : ""}
+        </div>
     </div>
 `;
 
@@ -120,8 +144,9 @@ export const generateTreeHTML = (data: ExportData) => {
         // Auto-expand first 2 levels
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.person').forEach((person, index) => {
-                const level = parseInt(person.querySelector('.generation').textContent.replace('Thế hệ ', ''));
-                if (level <= 2) {
+                const generationText = person.querySelector('.generation').textContent;
+                const generation = parseInt(generationText.replace('Đời thứ ', '').replace('N/A', '0'));
+                if (generation <= 2) {
                     const children = person.nextElementSibling;
                     const toggle = person.querySelector('.toggle');
                     if (children && children.classList.contains('children') && toggle) {
@@ -138,8 +163,23 @@ export const generateTreeHTML = (data: ExportData) => {
   return html;
 };
 
-export const generateMindmapHTML = (data: ExportData) => {
+export const generateMindmapHTML = async (data: ExportData) => {
   const { personsMap, relationships, roots } = data;
+
+  // Fetch branch names from database (same as BranchName component)
+  const { createClient } = await import("@/utils/supabase/client");
+  const supabase = createClient();
+  
+  const { data: branchesData, error: branchesError } = await supabase
+    .from("branches")
+    .select("id, name");
+  
+  const branchCache = new Map<number, string>();
+  if (!branchesError && branchesData) {
+    branchesData.forEach((branch) => {
+      branchCache.set(branch.id, branch.name);
+    });
+  }
 
   // Simple HTML mindmap với JavaScript cho interactivity
   let html = `
@@ -152,7 +192,10 @@ export const generateMindmapHTML = (data: ExportData) => {
         body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f4; }
         .person { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: white; cursor: pointer; }
         .person:hover { background: #f9fafb; }
-        .generation { background: #f0f0f0; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
+        .person-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .person-info { flex: 1; }
+        .generation { background: #f0f0f0; padding: 5px 10px; border-radius: 4px; font-weight: bold; display: inline-block; margin-bottom: 5px; }
+        .branch-line { color: #666; font-size: 0.9em; margin-bottom: 5px; font-style: italic; }
         .children { margin-left: 40px; border-left: 2px solid #ccc; padding-left: 20px; }
         .children.collapsed { display: none; }
         .toggle { float: right; font-size: 18px; color: #666; }
@@ -183,14 +226,20 @@ export const generateMindmapHTML = (data: ExportData) => {
       .map(r => personsMap.get(r.person_b))
       .filter(Boolean);
 
+    // Get branch name from cache (real names from branches table)
+    const branchName = person.branch_id ? branchCache.get(person.branch_id) || `Chi ${person.branch_id}` : '';
+    const generationText = person.generation ? `Đời thứ ${person.generation}` : 'N/A';
+
     let personHtml = `
     <div class="person ${person.gender}" onclick="toggleChildren(this)">
         <span class="toggle">${children.length > 0 ? '▼' : ''}</span>
-        <div class="generation">Thế hệ ${level + 1}</div>
-        <h3>${person.full_name}</h3>
-        <p>Sinh năm: ${person.birth_year || "N/A"}</p>
-        <p>Giới tính: ${person.gender === "female" ? "Nữ" : "Nam"}</p>
-        ${person.other_names ? `<p>Tên khác: ${person.other_names}</p>` : ""}
+        <div class="person-info">
+            <div class="generation">${branchName ? `${branchName} - ${generationText}` : generationText}</div>
+            <h3>${person.full_name}</h3>
+            <p>Sinh năm: ${person.birth_year || "N/A"}</p>
+            <p>Giới tính: ${person.gender === "female" ? "Nữ" : "Nam"}</p>
+            ${person.other_names ? `<p>Tên khác: ${person.other_names}</p>` : ""}
+        </div>
     </div>
 `;
 
@@ -251,8 +300,9 @@ export const generateMindmapHTML = (data: ExportData) => {
         // Auto-expand first 2 levels
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.person').forEach((person, index) => {
-                const level = parseInt(person.querySelector('.generation').textContent.replace('Thế hệ ', ''));
-                if (level <= 2) {
+                const generationText = person.querySelector('.generation').textContent;
+                const generation = parseInt(generationText.replace('Đời thứ ', '').replace('N/A', '0'));
+                if (generation <= 2) {
                     const children = person.nextElementSibling;
                     const toggle = person.querySelector('.toggle');
                     if (children && children.classList.contains('children') && toggle) {
@@ -269,11 +319,11 @@ export const generateMindmapHTML = (data: ExportData) => {
   return html;
 };
 
-export const generateInteractiveHTML = (data: ExportData) => {
+export const generateInteractiveHTML = async (data: ExportData) => {
   if (data.view === 'tree') {
-    return generateTreeHTML(data);
+    return await generateTreeHTML(data);
   } else if (data.view === 'mindmap') {
-    return generateMindmapHTML(data);
+    return await generateMindmapHTML(data);
   }
   throw new Error('Unsupported view type');
 };

@@ -61,7 +61,7 @@ export default function ExportButton({
           throw new Error("Không tìm thấy người gốc đã chọn.");
         }
 
-        const html = generateInteractiveHTML({
+        const html = await generateInteractiveHTML({
           personsMap,
           relationships,
           roots,
