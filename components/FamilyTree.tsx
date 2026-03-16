@@ -346,12 +346,10 @@ export default function FamilyTree({
             </div>
 
             {/* Export Button */}
-            {canEdit && (
-              <ExportButton
-                persons={Array.from(personsMap.values())}
-                relationships={relationships}
-              />
-            )}
+            <ExportButton
+              persons={Array.from(personsMap.values())}
+              relationships={relationships}
+            />
           </div>,
           portalNode,
         )}
