@@ -106,63 +106,62 @@ export default function PersonCard({ person }: PersonCardProps) {
             person.is_in_law ||
             person.birth_order != null ||
             person.generation != null) && (
-            <div className="flex flex-wrap items-center gap-1.5 shrink-0 mt-2">
-              {isDeceased && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold bg-stone-100 text-stone-500 uppercase tracking-widest border border-stone-200/60 shadow-xs">
-                  Đã mất
-                </span>
-              )}
-              {person.is_in_law && (
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold uppercase tracking-widest shadow-xs border ${
-                    person.gender === "male"
+              <div className="flex flex-wrap items-center gap-1.5 shrink-0 mt-2">
+                {isDeceased && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold bg-stone-100 text-stone-500 uppercase tracking-widest border border-stone-200/60 shadow-xs">
+                    Đã mất
+                  </span>
+                )}
+                {person.is_in_law && (
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold uppercase tracking-widest shadow-xs border ${person.gender === "male"
                       ? "bg-sky-50 text-sky-700 border-sky-200/60"
                       : person.gender === "female"
                         ? "bg-rose-50 text-rose-700 border-rose-200/60"
                         : "bg-stone-50 text-stone-700 border-stone-200/60"
-                  }`}
-                >
-                  {person.gender === "male"
-                    ? "Rể"
-                    : person.gender === "female"
-                      ? "Dâu"
-                      : "Khách"}
-                </span>
-              )}
-              {person.birth_order != null && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60 uppercase tracking-widest shadow-xs">
-                  {person.birth_order === 1
-                    ? "Con trưởng"
-                    : `Con thứ ${person.birth_order}`}
-                </span>
-              )}
-              {person.generation != null && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60 uppercase tracking-widest shadow-xs">
-                  Đời thứ {person.generation}
-                </span>
-              )}
-              {person.branch_id != null && person.generation != null ? (
-                <Link
-                  href={`/dashboard/lineage-trace?personId=${person.id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60 uppercase tracking-widest shadow-xs hover:bg-indigo-100 transition-colors cursor-pointer"
-                  title={`Xem truy vết tổ tiên ${person.full_name}`}
-                >
-                  <BranchName branchId={person.branch_id} />
-                </Link>
-              ) : (
-                person.branch_id != null && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60 uppercase tracking-widest shadow-xs">
-                    <BranchName branchId={person.branch_id} />
+                      }`}
+                  >
+                    {person.gender === "male"
+                      ? "Rể"
+                      : person.gender === "female"
+                        ? "Dâu"
+                        : "Khách"}
                   </span>
-                )
-              )}
-            </div>
-          )}
+                )}
+                {person.birth_order != null && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60 uppercase tracking-widest shadow-xs">
+                    {person.birth_order === 1
+                      ? "Con trưởng"
+                      : `Con thứ ${person.birth_order}`}
+                  </span>
+                )}
+                {person.generation != null && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60 uppercase tracking-widest shadow-xs">
+                    Đời thứ {person.generation}
+                  </span>
+                )}
+                {person.branch_id != null && person.generation != null ? (
+                  <Link
+                    href={`/dashboard/lineage-trace?personId=${person.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60 uppercase tracking-widest shadow-xs hover:bg-indigo-100 transition-colors cursor-pointer"
+                    title={`Xem truy vết tổ tiên ${person.full_name}`}
+                  >
+                    <BranchName branchId={person.branch_id} />
+                  </Link>
+                ) : (
+                  person.branch_id != null && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60 uppercase tracking-widest shadow-xs">
+                      <BranchName branchId={person.branch_id} />
+                    </span>
+                  )
+                )}
+              </div>
+            )}
         </div>
       </div>
 
-      {/* Truy Vết Nguồn Gốc Button */}
+      {/* Truy Vết Tổ Tiên Button */}
       <div className="px-2 pb-2">
         <Link
           href={`/dashboard/lineage-trace?personId=${person.id}`}
@@ -170,7 +169,7 @@ export default function PersonCard({ person }: PersonCardProps) {
           className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-medium rounded-lg hover:bg-amber-100 transition-colors border border-amber-200/60"
         >
           <Search className="size-3" />
-          Truy vết nguồn gốc
+          Truy vết tổ tiên
         </Link>
       </div>
     </button>
