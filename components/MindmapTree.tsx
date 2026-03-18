@@ -35,6 +35,7 @@ interface MindmapContextData {
   showAvatar: boolean;
   expandSignal: { type: "expand" | "collapse"; ts: number } | null;
   setMemberModalId: (id: string | null) => void;
+  maxDepth: number;
 }
 
 // Helper function to resolve tree connections for a person
@@ -96,8 +97,12 @@ const MindmapNode = memo(
     ctx: MindmapContextData;
   }) => {
     const data = getTreeData(personId, ctx);
-    const [isExpanded, setIsExpanded] = useState(level < 2);
+    const [isExpanded, setIsExpanded] = useState(level < ctx.maxDepth - 1);
     const [lastSignalTs, setLastSignalTs] = useState(0);
+
+    useEffect(() => {
+      setIsExpanded(level < ctx.maxDepth - 1);
+    }, [ctx.maxDepth, level]);
 
     if (ctx.expandSignal && ctx.expandSignal.ts !== lastSignalTs) {
       setIsExpanded(ctx.expandSignal.type === "expand");
@@ -342,7 +347,7 @@ export default function MindmapTree({
   roots,
   canEdit,
 }: MindmapTreeProps) {
-  const { showAvatar, setShowAvatar, setMemberModalId } = useDashboard();
+  const { showAvatar, setShowAvatar, setMemberModalId, maxDepth } = useDashboard();
   const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [hideSpouses, setHideSpouses] = useState(false);
@@ -387,6 +392,7 @@ export default function MindmapTree({
       showAvatar,
       expandSignal,
       setMemberModalId,
+      maxDepth,
     }),
     [
       personsMap,
@@ -397,6 +403,7 @@ export default function MindmapTree({
       showAvatar,
       expandSignal,
       setMemberModalId,
+      maxDepth,
     ],
   );
 

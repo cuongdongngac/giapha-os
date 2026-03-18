@@ -27,7 +27,7 @@ export default function ExportButton({
   const [showMenu, setShowMenu] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { view, rootId } = useDashboard();
+  const { view, rootId, maxDepth } = useDashboard();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -66,6 +66,7 @@ export default function ExportButton({
           relationships,
           roots,
           view: view as "tree" | "mindmap",
+          maxDepth,
         });
 
         const filename = `gia-pha-${view}-${new Date().toISOString().split("T")[0]}.html`;

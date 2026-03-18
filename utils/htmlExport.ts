@@ -5,10 +5,11 @@ interface ExportData {
   relationships: Relationship[];
   roots: Person[];
   view: 'tree' | 'mindmap';
+  maxDepth?: number;
 }
 
 export const generateTreeHTML = async (data: ExportData) => {
-  const { personsMap, relationships, roots } = data;
+  const { personsMap, relationships, roots, maxDepth = 999 } = data;
 
   // Fetch branch names from database (same as BranchName component)
   const { createClient } = await import("@/utils/supabase/client");
@@ -40,6 +41,7 @@ export const generateTreeHTML = async (data: ExportData) => {
         .person-info { flex: 1; }
         .generation { background: #f0f0f0; padding: 5px 10px; border-radius: 4px; font-weight: bold; display: inline-block; margin-bottom: 5px; }
         .branch-line { color: #666; font-size: 0.9em; margin-bottom: 5px; font-style: italic; }
+        .spouses { color: #555; font-size: 0.9em; margin-top: 5px; padding-top: 5px; border-top: 1px dashed #eee; }
         .children { margin-left: 40px; border-left: 2px solid #ccc; padding-left: 20px; }
         .children.collapsed { display: none; }
         .toggle { float: right; font-size: 18px; color: #666; }
@@ -65,10 +67,24 @@ export const generateTreeHTML = async (data: ExportData) => {
 
   // Simple tree building function với toggle
   const buildTree = (person: Person, level: number = 0): string => {
-    const children = relationships
-      .filter(r => r.type === 'biological_child' && r.person_a === person.id)
-      .map(r => personsMap.get(r.person_b))
-      .filter(Boolean);
+    const children = level < maxDepth - 1
+      ? relationships
+          .filter(r => (r.type === 'biological_child' || r.type === 'adopted_child') && r.person_a === person.id)
+          .map(r => personsMap.get(r.person_b))
+          .filter(Boolean)
+      : [];
+
+    const spouses = relationships
+      .filter(r => r.type === 'marriage' && (r.person_a === person.id || r.person_b === person.id))
+      .map(r => {
+        const spouseId = r.person_a === person.id ? r.person_b : r.person_a;
+        return personsMap.get(spouseId);
+      })
+      .filter(Boolean) as Person[];
+
+    const spouseHtml = spouses.length > 0 
+      ? `<div class="spouses">Vợ/Chồng: ${spouses.map(s => `<strong>${s.full_name}</strong>`).join(', ')}</div>`
+      : '';
 
     // Get branch name from cache (real names from branches table)
     const branchName = person.branch_id ? branchCache.get(person.branch_id) || `Chi ${person.branch_id}` : '';
@@ -83,6 +99,7 @@ export const generateTreeHTML = async (data: ExportData) => {
             <p>Sinh năm: ${person.birth_year || "N/A"}</p>
             <p>Giới tính: ${person.gender === "female" ? "Nữ" : "Nam"}</p>
             ${person.other_names ? `<p>Tên khác: ${person.other_names}</p>` : ""}
+            ${spouseHtml}
         </div>
     </div>
 `;
@@ -141,20 +158,9 @@ export const generateTreeHTML = async (data: ExportData) => {
             });
         }
         
-        // Auto-expand first 2 levels
+        // Auto-expand all pre-filtered nodes
         document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.person').forEach((person, index) => {
-                const generationText = person.querySelector('.generation').textContent;
-                const generation = parseInt(generationText.replace('Đời thứ ', '').replace('N/A', '0'));
-                if (generation <= 2) {
-                    const children = person.nextElementSibling;
-                    const toggle = person.querySelector('.toggle');
-                    if (children && children.classList.contains('children') && toggle) {
-                        children.classList.remove('collapsed');
-                        toggle.textContent = '▼';
-                    }
-                }
-            });
+            expandAll();
         });
     </script>
 </body>
@@ -164,7 +170,7 @@ export const generateTreeHTML = async (data: ExportData) => {
 };
 
 export const generateMindmapHTML = async (data: ExportData) => {
-  const { personsMap, relationships, roots } = data;
+  const { personsMap, relationships, roots, maxDepth = 999 } = data;
 
   // Fetch branch names from database (same as BranchName component)
   const { createClient } = await import("@/utils/supabase/client");
@@ -196,6 +202,7 @@ export const generateMindmapHTML = async (data: ExportData) => {
         .person-info { flex: 1; }
         .generation { background: #f0f0f0; padding: 5px 10px; border-radius: 4px; font-weight: bold; display: inline-block; margin-bottom: 5px; }
         .branch-line { color: #666; font-size: 0.9em; margin-bottom: 5px; font-style: italic; }
+        .spouses { color: #555; font-size: 0.9em; margin-top: 5px; padding-top: 5px; border-top: 1px dashed #eee; }
         .children { margin-left: 40px; border-left: 2px solid #ccc; padding-left: 20px; }
         .children.collapsed { display: none; }
         .toggle { float: right; font-size: 18px; color: #666; }
@@ -221,10 +228,24 @@ export const generateMindmapHTML = async (data: ExportData) => {
 
   // Simple mindmap building function với toggle
   const buildMindmap = (person: Person, level: number = 0): string => {
-    const children = relationships
-      .filter(r => r.type === 'biological_child' && r.person_a === person.id)
-      .map(r => personsMap.get(r.person_b))
-      .filter(Boolean);
+    const children = level < maxDepth - 1
+      ? relationships
+          .filter(r => (r.type === 'biological_child' || r.type === 'adopted_child') && r.person_a === person.id)
+          .map(r => personsMap.get(r.person_b))
+          .filter(Boolean)
+      : [];
+
+    const spouses = relationships
+      .filter(r => r.type === 'marriage' && (r.person_a === person.id || r.person_b === person.id))
+      .map(r => {
+        const spouseId = r.person_a === person.id ? r.person_b : r.person_a;
+        return personsMap.get(spouseId);
+      })
+      .filter(Boolean) as Person[];
+
+    const spouseHtml = spouses.length > 0 
+      ? `<div class="spouses">Vợ/Chồng: ${spouses.map(s => `<strong>${s.full_name}</strong>`).join(', ')}</div>`
+      : '';
 
     // Get branch name from cache (real names from branches table)
     const branchName = person.branch_id ? branchCache.get(person.branch_id) || `Chi ${person.branch_id}` : '';
@@ -239,6 +260,7 @@ export const generateMindmapHTML = async (data: ExportData) => {
             <p>Sinh năm: ${person.birth_year || "N/A"}</p>
             <p>Giới tính: ${person.gender === "female" ? "Nữ" : "Nam"}</p>
             ${person.other_names ? `<p>Tên khác: ${person.other_names}</p>` : ""}
+            ${spouseHtml}
         </div>
     </div>
 `;
@@ -297,20 +319,9 @@ export const generateMindmapHTML = async (data: ExportData) => {
             });
         }
         
-        // Auto-expand first 2 levels
+        // Auto-expand all pre-filtered nodes
         document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.person').forEach((person, index) => {
-                const generationText = person.querySelector('.generation').textContent;
-                const generation = parseInt(generationText.replace('Đời thứ ', '').replace('N/A', '0'));
-                if (generation <= 2) {
-                    const children = person.nextElementSibling;
-                    const toggle = person.querySelector('.toggle');
-                    if (children && children.classList.contains('children') && toggle) {
-                        children.classList.remove('collapsed');
-                        toggle.textContent = '▼';
-                    }
-                }
-            });
+            expandAll();
         });
     </script>
 </body>

@@ -13,6 +13,8 @@ interface DashboardState {
   setView: (view: ViewMode) => void;
   rootId: string | null;
   setRootId: (id: string | null) => void;
+  maxDepth: number;
+  setMaxDepth: (depth: number) => void;
 }
 
 export const DashboardContext = createContext<DashboardState | undefined>(
@@ -25,6 +27,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const [showAvatar, setShowAvatar] = useState<boolean>(true);
   const [view, setViewState] = useState<ViewMode>("list");
   const [rootId, setRootIdState] = useState<string | null>(null);
+  const [maxDepth, setMaxDepthState] = useState<number>(3);
 
   // Keep state in sync with URL query params (so deep-links can switch tabs)
   useEffect(() => {
@@ -36,6 +39,9 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
     const rootIdParam = searchParams.get("rootId");
     if (rootIdParam !== rootId) setRootIdState(rootIdParam);
+
+    const maxDepthParam = searchParams.get("maxDepth");
+    if (maxDepthParam) setMaxDepthState(parseInt(maxDepthParam, 10));
 
     // We intentionally ignore memberModalId in the Next.js router loop
     // to avoid Next.js triggering re-renders on push.
@@ -98,6 +104,15 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const setMaxDepth = (depth: number) => {
+    setMaxDepthState(depth);
+    if (typeof window !== "undefined") {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set("maxDepth", depth.toString());
+      window.history.replaceState(null, "", newUrl.toString());
+    }
+  };
+
   return (
     <DashboardContext.Provider
       value={{
@@ -109,6 +124,8 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         setView,
         rootId,
         setRootId,
+        maxDepth,
+        setMaxDepth,
       }}
     >
       {children}
@@ -130,6 +147,8 @@ export function useDashboard(): DashboardState {
       setView: () => {},
       rootId: null,
       setRootId: () => {},
+      maxDepth: 3,
+      setMaxDepth: () => {},
     };
   }
   return context;

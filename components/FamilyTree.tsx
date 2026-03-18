@@ -38,7 +38,7 @@ export default function FamilyTree({
   const [hideMales, setHideMales] = useState(false);
   const [hideFemales, setHideFemales] = useState(false);
 
-  const { showAvatar, setShowAvatar } = useDashboard();
+  const { showAvatar, setShowAvatar, maxDepth } = useDashboard();
   const filtersRef = useRef<HTMLDivElement>(null);
   const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
 
@@ -177,6 +177,7 @@ export default function FamilyTree({
   // Tracks visited IDs to prevent infinite loops from circular relationships
   const renderTreeNode = (
     personId: string,
+    level: number = 1,
     visited: Set<string> = new Set(),
   ): React.ReactNode => {
     if (visited.has(personId)) return null; // cycle guard
@@ -215,12 +216,12 @@ export default function FamilyTree({
           </div>
         </div>
 
-        {/* Render Children (if any) */}
-        {data.children.length > 0 && (
+        {/* Render Children (if any) and level is within maxDepth */}
+        {data.children.length > 0 && level < maxDepth && (
           <ul>
             {data.children.map((child) => (
               <React.Fragment key={child.id}>
-                {renderTreeNode(child.id, new Set(visited))}
+                {renderTreeNode(child.id, level + 1, new Set(visited))}
               </React.Fragment>
             ))}
           </ul>
