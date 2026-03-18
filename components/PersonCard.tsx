@@ -8,6 +8,7 @@ import { useDashboard } from "./DashboardContext";
 import DefaultAvatar from "./DefaultAvatar";
 import { FemaleIcon, MaleIcon } from "./GenderIcons";
 import BranchName from "./BrancheName";
+import { Search } from "lucide-react";
 interface PersonCardProps {
   person: Person;
 }
@@ -142,10 +143,10 @@ export default function PersonCard({ person }: PersonCardProps) {
               )}
               {person.branch_id != null && person.generation != null ? (
                 <Link
-                  href={`/dashboard?view=members_filter&branch_id=${person.branch_id}&generation=${person.generation}`}
+                  href={`/dashboard/lineage-trace?personId=${person.id}`}
                   onClick={(e) => e.stopPropagation()}
                   className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60 uppercase tracking-widest shadow-xs hover:bg-indigo-100 transition-colors cursor-pointer"
-                  title={`Xem tất cả thành viên chi này đời thứ ${person.generation}`}
+                  title={`Xem truy vết tổ tiên ${person.full_name}`}
                 >
                   <BranchName branchId={person.branch_id} />
                 </Link>
@@ -159,6 +160,18 @@ export default function PersonCard({ person }: PersonCardProps) {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Truy Vết Nguồn Gốc Button */}
+      <div className="px-2 pb-2">
+        <Link
+          href={`/dashboard/lineage-trace?personId=${person.id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-medium rounded-lg hover:bg-amber-100 transition-colors border border-amber-200/60"
+        >
+          <Search className="size-3" />
+          Truy vết nguồn gốc
+        </Link>
       </div>
     </button>
   );
