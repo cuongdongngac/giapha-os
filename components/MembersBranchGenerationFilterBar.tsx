@@ -52,8 +52,6 @@ export default function MembersBranchGenerationFilterBar({
       if (v == null || v === "") sp.delete(k);
       else sp.set(k, v);
     });
-    console.log("pushParams called with:", next);
-    console.log("Final URL params:", sp.toString());
     const newUrl = `${pathname}?${sp.toString()}`;
     router.push(newUrl);
 
