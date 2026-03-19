@@ -1,10 +1,11 @@
 "use client";
 
 import { Person } from "@/types";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Info, TreePine, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { useDashboard } from "./DashboardContext";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
 import DefaultAvatar from "./DefaultAvatar";
 
 interface FamilyNodeCardProps {
@@ -21,6 +22,8 @@ interface FamilyNodeCardProps {
 
 export default function FamilyNodeCard({
   person,
+  role,
+  note,
   onClickCard,
   onClickName,
   isExpandable = false,
@@ -32,8 +35,22 @@ export default function FamilyNodeCard({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const isDeceased = person.is_deceased;
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Handle click to change root
   const handleRootChange = () => {
@@ -45,6 +62,13 @@ export default function FamilyNodeCard({
     setTimeout(() => {
       window.location.href = newUrl;
     }, 100);
+    setShowMenu(false);
+  };
+
+  // Handle click to show modal
+  const handleShowInfo = () => {
+    setMemberModalId(person.id);
+    setShowMenu(false);
   };
 
   const content = (
@@ -109,45 +133,72 @@ export default function FamilyNodeCard({
         </div>
       )}
 
-      {/* 2. Gender Icon + Name */}
-      <div className="flex flex-col items-center justify-center gap-1 w-full px-0.5 sm:px-1 relative z-10">
-        <span
-          className={`text-[10px] sm:text-[11px] md:text-xs font-bold text-center leading-tight line-clamp-2 transition-colors cursor-pointer
-            ${onClickName ? "text-stone-800 group-hover:text-amber-700 hover:underline" : "text-stone-800 group-hover:text-amber-800"}`}
-          title={person.full_name}
-          onClick={(e) => {
-            if (onClickName) {
-              e.stopPropagation();
-              e.preventDefault();
-              onClickName(e);
-            }
-          }}
-        >
-          {person.full_name}
-        </span>
-        {/* {person.birth_order != null && (
-          <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-200/60 leading-none">
-            {person.birth_order === 1 ? "Trưởng" : `Thứ ${person.birth_order}`}
-          </span>
-        )} */}
-        {/* {person.generation != null && (
-          <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-600 border border-emerald-200/60 leading-none">
-            Đ.{person.generation}
-          </span>
-        )} */}
-        {/* {isDeceased && (
-          <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold bg-stone-100 text-stone-400 uppercase tracking-wider border border-stone-200/50">
-            Đã mất
-          </span>
-        )} */}
-      </div>
+      {/* 2. Name and other info */}
+      <div className="relative z-10 text-center">
+        {onClickName ? (
+          <button
+            onClick={onClickName}
+            className="text-[10px] sm:text-xs md:text-sm font-bold text-stone-700 hover:text-amber-600 transition-colors leading-tight line-clamp-2"
+          >
+            {person.full_name}
+          </button>
+        ) : (
+          <p className="text-[10px] sm:text-xs md:text-sm font-bold text-stone-700 leading-tight line-clamp-2">
+            {person.full_name}
+          </p>
+        )}
+        {person.birth_year && (
+          <p className="text-[9px] sm:text-[10px] md:text-xs text-stone-500 leading-tight">
+            {person.birth_year}
+          </p>
+        )}
+        {role && (
+          <p className="text-[9px] sm:text-[10px] md:text-xs text-stone-500 leading-tight">
+            {role}
+          </p>
+        )}
+        {note && (
+          <p className="text-[9px] sm:text-[10px] md:text-xs text-amber-600 leading-tight">
+            {note}
+          </p>
+        )}
 
-      {/* 3. Role */}
-      {/* {role && (
-        <span className="mt-1 px-2.5 py-0.5 bg-stone-100/80 border border-stone-200 text-stone-500 font-medium tracking-wide w-auto text-center leading-tight rounded-full text-[10px] shadow-sm">
-          {role} {note && `(${note})`}
-        </span>
-      )} */}
+        {/* Action Menu Button */}
+        {!onClickCard && !onClickName && (
+          <div className="relative mt-1" ref={menuRef}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(!showMenu);
+              }}
+              className="flex items-center gap-1 text-[9px] sm:text-[10px] text-stone-500 hover:text-amber-600 transition-colors bg-white/80 rounded-full px-2 py-0.5 shadow-sm border border-stone-200/60"
+            >
+              <ChevronDown className="size-3" />
+              Hành động
+            </button>
+
+            {/* Dropdown Menu */}
+            {showMenu && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-white border border-stone-200 rounded-lg shadow-lg py-1 z-50 min-w-[120px]">
+                <button
+                  onClick={handleShowInfo}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-stone-700 hover:bg-stone-50 transition-colors"
+                >
+                  <Info className="size-3" />
+                  Xem thông tin
+                </button>
+                <button
+                  onClick={handleRootChange}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-stone-700 hover:bg-stone-50 transition-colors"
+                >
+                  <TreePine className="size-3" />
+                  Đặt làm gốc
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -155,9 +206,5 @@ export default function FamilyNodeCard({
     return content;
   }
 
-  return (
-    <button onClick={handleRootChange} className="block w-fit">
-      {content}
-    </button>
-  );
+  return <div className="block w-fit">{content}</div>;
 }
