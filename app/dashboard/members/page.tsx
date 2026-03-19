@@ -95,13 +95,13 @@ export default async function MembersPage({
     case "generation_asc":
       personsQuery = personsQuery.order("generation", {
         ascending: true,
-        nullsFirst: true,
+        nullsFirst: false,
       });
       break;
     case "generation_desc":
       personsQuery = personsQuery.order("generation", {
         ascending: false,
-        nullsFirst: true,
+        nullsFirst: false,
       });
       break;
     case "updated_asc":

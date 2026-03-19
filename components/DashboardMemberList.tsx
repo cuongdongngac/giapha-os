@@ -72,6 +72,12 @@ export default function DashboardMemberList({
         return (a.birth_year || 0) - (b.birth_year || 0);
       case "birth_desc":
         return (b.birth_year || 0) - (a.birth_year || 0);
+      case "generation_asc":
+        // Tăng dần: nhỏ hơn lên trước, NULL xuống cuối
+        return (a.generation ?? 999) - (b.generation ?? 999);
+      case "generation_desc":
+        // Giảm dần: lớn hơn lên trước, NULL xuống cuối
+        return (b.generation ?? 999) - (a.generation ?? 999);
       case "updated_asc":
         return (
           new Date(a.updated_at || 0).getTime() -
