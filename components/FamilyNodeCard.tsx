@@ -4,6 +4,7 @@ import { Person } from "@/types";
 import { Minus, Plus } from "lucide-react";
 import Image from "next/image";
 import { useDashboard } from "./DashboardContext";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import DefaultAvatar from "./DefaultAvatar";
 
 interface FamilyNodeCardProps {
@@ -28,8 +29,23 @@ export default function FamilyNodeCard({
   isPlusVisible = false,
 }: FamilyNodeCardProps) {
   const { showAvatar, setMemberModalId } = useDashboard();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const isDeceased = person.is_deceased;
+
+  // Handle click to change root
+  const handleRootChange = () => {
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.set("rootId", person.id);
+    const newUrl = `${pathname}?${sp.toString()}`;
+    router.push(newUrl);
+    // Force refresh to ensure tree re-renders with new root
+    setTimeout(() => {
+      window.location.href = newUrl;
+    }, 100);
+  };
 
   const content = (
     <div
@@ -140,7 +156,7 @@ export default function FamilyNodeCard({
   }
 
   return (
-    <button onClick={() => setMemberModalId(person.id)} className="block w-fit">
+    <button onClick={handleRootChange} className="block w-fit">
       {content}
     </button>
   );

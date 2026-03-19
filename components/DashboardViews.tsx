@@ -18,12 +18,14 @@ interface DashboardViewsProps {
   persons: Person[];
   relationships: Relationship[];
   canEdit?: boolean;
+  finalRootId?: string;
 }
 
 export default function DashboardViews({
   persons,
   relationships,
   canEdit = false,
+  finalRootId,
 }: DashboardViewsProps) {
   const { view: currentView, rootId, maxDepth, setMaxDepth } = useDashboard();
 
@@ -40,29 +42,29 @@ export default function DashboardViews({
         .map((r) => r.person_b),
     );
 
-    let finalRootId = rootId;
+    let calculatedRootId = rootId || finalRootId;
 
     // If no rootId is provided, fallback to the earliest created person
-    if (!finalRootId || !pMap.has(finalRootId)) {
+    if (!calculatedRootId || !pMap.has(calculatedRootId)) {
       const rootsFallback = persons.filter((p) => !childIds.has(p.id));
       if (rootsFallback.length > 0) {
-        finalRootId = rootsFallback[0].id;
+        calculatedRootId = rootsFallback[0].id;
       } else if (persons.length > 0) {
-        finalRootId = persons[0].id; // ultimate fallback
+        calculatedRootId = persons[0].id; // ultimate fallback
       }
     }
 
     let calculatedRoots: Person[] = [];
-    if (finalRootId && pMap.has(finalRootId)) {
-      calculatedRoots = [pMap.get(finalRootId)!];
+    if (calculatedRootId && pMap.has(calculatedRootId)) {
+      calculatedRoots = [pMap.get(calculatedRootId)!];
     }
 
     return {
       personsMap: pMap,
       roots: calculatedRoots,
-      defaultRootId: finalRootId,
+      defaultRootId: calculatedRootId,
     };
-  }, [persons, relationships, rootId]);
+  }, [persons, relationships, rootId, finalRootId]);
 
   const activeRootId = rootId || defaultRootId;
 
@@ -76,27 +78,33 @@ export default function DashboardViews({
               <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                 <RootSelector persons={persons} currentRootId={activeRootId} />
                 <div className="flex items-center gap-1 bg-white/80 backdrop-blur-md pl-3 pr-1.5 py-1 rounded-full border border-stone-200/60 shadow-sm h-10 transition-all hover:border-amber-200 hover:bg-white focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-400">
-                  <span className="text-sm font-medium text-stone-500 hidden sm:inline whitespace-nowrap">Độ sâu hiển thị:</span>
-                  <span className="text-sm font-medium text-stone-500 sm:hidden whitespace-nowrap">Độ sâu:</span>
+                  <span className="text-sm font-medium text-stone-500 hidden sm:inline whitespace-nowrap">
+                    Độ sâu hiển thị:
+                  </span>
+                  <span className="text-sm font-medium text-stone-500 sm:hidden whitespace-nowrap">
+                    Độ sâu:
+                  </span>
                   <div className="flex items-center">
                     <input
                       type="number"
                       min={1}
                       max={99}
                       value={maxDepth}
-                      onChange={(e) => setMaxDepth(Math.max(1, parseInt(e.target.value) || 1))}
+                      onChange={(e) =>
+                        setMaxDepth(Math.max(1, parseInt(e.target.value) || 1))
+                      }
                       className="w-8 text-center text-sm font-bold text-amber-700 bg-transparent border-none p-0 focus:ring-0 m-0 focus:outline-none placeholder:text-stone-300"
-                      style={{ MozAppearance: 'textfield' }}
+                      style={{ MozAppearance: "textfield" }}
                     />
                     <div className="flex flex-col ml-0.5">
-                      <button 
+                      <button
                         onClick={() => setMaxDepth(Math.min(99, maxDepth + 1))}
                         className="text-stone-400 hover:text-amber-600 focus:outline-none p-0.5 rounded hover:bg-stone-100/50 transition-colors"
                         title="Tăng độ sâu"
                       >
                         <ChevronUp className="size-3" strokeWidth={3} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => setMaxDepth(Math.max(1, maxDepth - 1))}
                         className="text-stone-400 hover:text-amber-600 focus:outline-none p-0.5 rounded hover:bg-stone-100/50 transition-colors"
                         title="Giảm độ sâu"
@@ -105,13 +113,17 @@ export default function DashboardViews({
                       </button>
                     </div>
                   </div>
-                  <style dangerouslySetInnerHTML={{__html: `
+                  <style
+                    dangerouslySetInnerHTML={{
+                      __html: `
                     input[type=number]::-webkit-inner-spin-button, 
                     input[type=number]::-webkit-outer-spin-button { 
                       -webkit-appearance: none; 
                       margin: 0; 
                     }
-                  `}} />
+                  `,
+                    }}
+                  />
                 </div>
               </div>
               <div
@@ -160,6 +172,7 @@ export default function DashboardViews({
         <div className="flex-1 w-full relative z-10">
           {currentView === "tree" && (
             <FamilyTree
+              key={`tree-${activeRootId}`}
               personsMap={personsMap}
               relationships={relationships}
               roots={roots}
@@ -168,6 +181,7 @@ export default function DashboardViews({
           )}
           {currentView === "mindmap" && (
             <MindmapTree
+              key={`mindmap-${activeRootId}`}
               personsMap={personsMap}
               relationships={relationships}
               roots={roots}

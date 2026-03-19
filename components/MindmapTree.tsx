@@ -16,6 +16,7 @@ import Image from "next/image";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDashboard } from "./DashboardContext";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import DefaultAvatar from "./DefaultAvatar";
 import ExportButton from "./ExportButton";
 
@@ -36,6 +37,7 @@ interface MindmapContextData {
   expandSignal: { type: "expand" | "collapse"; ts: number } | null;
   setMemberModalId: (id: string | null) => void;
   maxDepth: number;
+  handleRootChange: (personId: string) => void;
 }
 
 // Helper function to resolve tree connections for a person
@@ -167,7 +169,7 @@ const MindmapNode = memo(
                 transition={{ duration: 0.3 }}
                 className={`group/card relative flex flex-wrap items-center gap-2 bg-white/60 rounded-2xl border border-stone-200/60 p-2 sm:p-2.5 shadow-sm hover:border-amber-300 hover:shadow-md hover:bg-white/90 transition-all duration-300 overflow-hidden cursor-pointer
                 ${data.person.is_deceased ? "opacity-80 grayscale-[0.3]" : ""}`}
-                onClick={() => ctx.setMemberModalId(data.person.id)}
+                onClick={() => ctx.handleRootChange(data.person.id)}
               >
                 <div className="flex items-center gap-2.5 relative z-10 w-full">
                   <div className="flex flex-1 items-center gap-2.5 min-w-0">
@@ -259,7 +261,7 @@ const MindmapNode = memo(
                             key={spouseData.person.id}
                             onClick={(e) => {
                               e.stopPropagation();
-                              ctx.setMemberModalId(spouseData.person.id);
+                              ctx.handleRootChange(spouseData.person.id);
                             }}
                             className={`flex flex-col items-center gap-1 bg-stone-50/50 hover:bg-white rounded-xl p-1.5 border border-stone-200/60 hover:border-amber-300 transition-all shadow-sm hover:shadow-md group/spouse cursor-pointer
                             ${spouseData.person.is_deceased ? "opacity-80 grayscale-[0.3]" : ""}`}
@@ -347,7 +349,11 @@ export default function MindmapTree({
   roots,
   canEdit,
 }: MindmapTreeProps) {
-  const { showAvatar, setShowAvatar, setMemberModalId, maxDepth } = useDashboard();
+  const { showAvatar, setShowAvatar, setMemberModalId, maxDepth } =
+    useDashboard();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [hideSpouses, setHideSpouses] = useState(false);
@@ -358,6 +364,18 @@ export default function MindmapTree({
     ts: number;
   } | null>(null);
   const filtersRef = useRef<HTMLDivElement>(null);
+
+  // Handle root change
+  const handleRootChange = (personId: string) => {
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.set("rootId", personId);
+    const newUrl = `${pathname}?${sp.toString()}`;
+    router.push(newUrl);
+    // Force refresh to ensure tree re-renders with new root
+    setTimeout(() => {
+      window.location.href = newUrl;
+    }, 100);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -393,6 +411,7 @@ export default function MindmapTree({
       expandSignal,
       setMemberModalId,
       maxDepth,
+      handleRootChange,
     }),
     [
       personsMap,
@@ -404,6 +423,7 @@ export default function MindmapTree({
       expandSignal,
       setMemberModalId,
       maxDepth,
+      handleRootChange,
     ],
   );
 

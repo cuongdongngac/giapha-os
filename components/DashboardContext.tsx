@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { ViewMode } from "./ViewToggle";
 
 interface DashboardState {
@@ -21,13 +21,25 @@ export const DashboardContext = createContext<DashboardState | undefined>(
   undefined,
 );
 
-export function DashboardProvider({ children }: { children: React.ReactNode }) {
+export function DashboardProvider({
+  children,
+  initialRootId,
+}: {
+  children: React.ReactNode;
+  initialRootId?: string;
+}) {
   const searchParams = useSearchParams();
   const [memberModalId, setMemberModalId] = useState<string | null>(null);
   const [showAvatar, setShowAvatar] = useState<boolean>(true);
   const [view, setViewState] = useState<ViewMode>("list");
   const [rootId, setRootIdState] = useState<string | null>(null);
   const [maxDepth, setMaxDepthState] = useState<number>(3);
+
+  // Store initialRootId in a ref to use it in setView
+  const envRootIdRef = useRef(initialRootId);
+  useEffect(() => {
+    envRootIdRef.current = initialRootId;
+  }, [initialRootId]);
 
   // Keep state in sync with URL query params (so deep-links can switch tabs)
   useEffect(() => {
@@ -37,8 +49,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     const viewParam = searchParams.get("view") as ViewMode;
     if (viewParam && viewParam !== view) setViewState(viewParam);
 
+    // Prioritize environment root ID, then URL parameter
     const rootIdParam = searchParams.get("rootId");
-    if (rootIdParam !== rootId) setRootIdState(rootIdParam);
+    const effectiveRootId = rootIdParam || initialRootId || null;
+    if (effectiveRootId !== rootId) setRootIdState(effectiveRootId);
 
     const maxDepthParam = searchParams.get("maxDepth");
     if (maxDepthParam) setMaxDepthState(parseInt(maxDepthParam, 10));
@@ -53,7 +67,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         setMemberModalId(modalId);
       }
     }
-  }, [searchParams, memberModalId, rootId, view]);
+  }, [searchParams, memberModalId, rootId, view, initialRootId]);
 
   // Sync to URL silently
   const updateModalId = (id: string | null) => {
@@ -87,6 +101,19 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set("view", v);
+
+      // Always include maxDepth and rootId when switching to tree/mindmap views
+      if (v === "tree" || v === "mindmap") {
+        // Get rootId from environment variable (passed as initialRootId)
+        const envRootId = envRootIdRef.current;
+        if (envRootId) {
+          newUrl.searchParams.set("rootId", envRootId);
+        }
+
+        // Set maxDepth (you can adjust this value as needed)
+        newUrl.searchParams.set("maxDepth", "4");
+      }
+
       window.history.replaceState(null, "", newUrl.toString());
     }
   };

@@ -11,7 +11,10 @@ interface PageProps {
 }
 
 export default async function FamilyTreePage({ searchParams }: PageProps) {
-  const { rootId, view = "list" } = await searchParams;
+  const { view = "list" } = await searchParams;
+
+  // Get rootId from environment variable
+  const envRootId = process.env.ROOTID;
 
   // If view is list, we only need persons, not relationships.
   // We fetch persons for all views to pass down as a prop if we want, or let components fetch.
@@ -67,7 +70,7 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
       .map((r) => r.person_b),
   );
 
-  let finalRootId = rootId;
+  let finalRootId = envRootId;
 
   // If no rootId is provided, fallback to the earliest created person
   if (!finalRootId || !personsMap.has(finalRootId)) {
@@ -80,12 +83,13 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
   }
 
   return (
-    <DashboardProvider>
+    <DashboardProvider initialRootId={finalRootId}>
       <ViewToggle />
       <DashboardViews
         persons={persons}
         relationships={relationships}
         canEdit={canEdit}
+        finalRootId={finalRootId}
       />
 
       <MemberDetailModal />

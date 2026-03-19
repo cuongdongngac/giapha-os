@@ -18,7 +18,9 @@ export default function RootSelector({
       persons={persons}
       selectedId={currentRootId}
       onSelect={(id) => {
-        if (id) setRootId(id);
+        if (id) {
+          setRootId(id);
+        }
       }}
       placeholder="Chọn người..."
       label="Gốc hiển thị"
