@@ -453,31 +453,31 @@ function LineageDisplay({
   onPersonClick: (personId: string) => void;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {lineage.map((person, index) => (
         <div key={person.id} className="flex items-center">
           {/* Generation Number */}
-          <div className="flex-shrink-0 w-16 h-16 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center font-bold text-lg border-4 border-amber-200 shadow-lg">
+          <div className="flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center font-bold text-sm sm:text-lg border-4 border-amber-200 shadow-lg">
             {index + 1}
           </div>
 
           {/* Arrow down for all except first */}
           {index > 0 && (
-            <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center">
-              <div className="w-1 h-8 bg-gray-400"></div>
-              <div className="w-4 h-4 border-l-4 border-l-gray-400 border-t-4 border-t-transparent transform -translate-y-2"></div>
+            <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center">
+              <div className="w-0.5 h-4 sm:h-6 bg-gray-400"></div>
+              <div className="w-2 h-2 sm:w-4 sm:h-4 border-l-4 border-l-gray-400 border-t-4 border-t-transparent transform -translate-y-1 sm:-translate-y-2"></div>
             </div>
           )}
 
           {/* Person Card - Clickable */}
           <button
             onClick={() => onPersonClick(person.id)}
-            className="flex-1 bg-gradient-to-r from-white via-gray-50 to-gray-100 border border-gray-200 rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-amber-400 hover:shadow-amber-100/50 text-left"
+            className="flex-1 bg-gradient-to-r from-white via-gray-50 to-gray-100 border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 sm:p-8 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-amber-400 hover:shadow-amber-100/50 text-left"
           >
-            <div className="flex items-start space-x-6">
+            <div className="flex items-start space-x-3 sm:space-x-6">
               {/* Avatar */}
               <div
-                className={`flex-shrink-0 w-20 h-20 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-xl ${
+                className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-2xl shadow-xl ${
                   person.gender === "female"
                     ? "bg-gradient-to-br from-pink-400 to-pink-700"
                     : "bg-gradient-to-br from-blue-400 to-blue-700"
@@ -488,61 +488,65 @@ function LineageDisplay({
 
               {/* Person Info */}
               <div className="flex-1">
-                <div className="font-bold text-gray-900 text-3xl mb-4">
+                <div className="font-bold text-gray-900 text-xl sm:text-3xl mb-2 sm:mb-4">
                   {person.full_name}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-base">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 text-sm sm:text-base">
                   {person.birth_year && (
-                    <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      <span className="text-gray-700 font-medium">
+                    <div className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-500 rounded-full"></div>
+                      <span className="text-gray-700 font-medium text-xs sm:text-sm">
                         Sinh năm:
                       </span>
-                      <span className="text-gray-900 font-semibold">
+                      <span className="text-gray-900 font-semibold text-xs sm:text-sm">
                         {person.birth_year}
                       </span>
                     </div>
                   )}
                   {person.generation && (
-                    <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <span className="text-gray-700 font-medium">Thế hệ:</span>
-                      <span className="text-gray-900 font-semibold">
+                    <div className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-green-50 rounded-lg border border-green-200">
+                      <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full"></div>
+                      <span className="text-gray-700 font-medium text-xs sm:text-sm">
+                        Thế hệ:
+                      </span>
+                      <span className="text-gray-900 font-semibold text-xs sm:text-sm">
                         {person.generation}
                       </span>
                     </div>
                   )}
                   {person.branch_id && (
-                    <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
-                      <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                      <span className="text-gray-700 font-medium">Chi:</span>
-                      <span className="text-gray-900 font-semibold">
+                    <div className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-purple-50 rounded-lg border border-purple-200">
+                      <div className="w-2 h-2 sm:w-3 sm:h-3 bg-purple-500 rounded-full"></div>
+                      <span className="text-gray-700 font-medium text-xs sm:text-sm">
+                        Chi:
+                      </span>
+                      <span className="text-gray-900 font-semibold text-xs sm:text-sm">
                         {getBranchName(person.branch_id)}
                       </span>
                     </div>
                   )}
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-gray-50 rounded-lg border border-gray-200">
                     <div
-                      className={`w-3 h-3 rounded-full ${
+                      className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
                         person.gender === "female"
                           ? "bg-pink-500"
                           : "bg-blue-500"
                       }`}
                     ></div>
-                    <span className="text-gray-700 font-medium">
+                    <span className="text-gray-700 font-medium text-xs sm:text-sm">
                       Giới tính:
                     </span>
-                    <span className="text-gray-900 font-semibold">
+                    <span className="text-gray-900 font-semibold text-xs sm:text-sm">
                       {person.gender === "female" ? "Nữ" : "Nam"}
                     </span>
                   </div>
                 </div>
                 {person.other_names && (
-                  <div className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-200">
-                    <div className="text-sm text-amber-700 font-medium mb-2">
+                  <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-amber-50 rounded-xl border border-amber-200">
+                    <div className="text-sm sm:text-base text-amber-700 font-medium mb-1 sm:mb-2">
                       Tên khác:
                     </div>
-                    <div className="text-base text-amber-900 font-medium">
+                    <div className="text-sm sm:text-base text-amber-900 font-medium">
                       {person.other_names}
                     </div>
                   </div>
