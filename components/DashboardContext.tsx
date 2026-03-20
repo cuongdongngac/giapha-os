@@ -85,15 +85,6 @@ export function DashboardProvider({
 
   const updateAvatar = (show: boolean) => {
     setShowAvatar(show);
-    if (typeof window !== "undefined") {
-      const newUrl = new URL(window.location.href);
-      if (!show) {
-        newUrl.searchParams.set("avatar", "hide");
-      } else {
-        newUrl.searchParams.delete("avatar");
-      }
-      window.history.replaceState(null, "", newUrl.toString());
-    }
   };
 
   const setView = (v: ViewMode) => {
@@ -104,16 +95,29 @@ export function DashboardProvider({
 
       // Always include maxDepth and rootId when switching to tree/mindmap views
       if (v === "tree" || v === "mindmap") {
-        // Get rootId from environment variable (passed as initialRootId)
-        const envRootId = envRootIdRef.current;
-        if (envRootId) {
-          newUrl.searchParams.set("rootId", envRootId);
+        // For mindmap, prioritize current URL rootId, fallback to environment
+        if (v === "mindmap") {
+          const currentRootId = newUrl.searchParams.get("rootId");
+          const envRootId = envRootIdRef.current;
+
+          if (currentRootId) {
+            // Use existing rootId from URL
+            newUrl.searchParams.set("rootId", currentRootId);
+          } else if (envRootId) {
+            // Fallback to environment variable
+            newUrl.searchParams.set("rootId", envRootId);
+          }
+        } else {
+          // For tree, use environment variable
+          const envRootId = envRootIdRef.current;
+          if (envRootId) {
+            newUrl.searchParams.set("rootId", envRootId);
+          }
         }
 
         // Set maxDepth (you can adjust this value as needed)
         newUrl.searchParams.set("maxDepth", "4");
       }
-
       window.history.replaceState(null, "", newUrl.toString());
     }
   };

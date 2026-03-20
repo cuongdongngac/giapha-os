@@ -225,8 +225,8 @@ const MindmapNode = memo(
                               )}
                             </div>
                           )}
-                          <span className="text-[10px] font-bold text-stone-600 truncate max-w-[50px] text-center">
-                            {spouseData.person.full_name.split(" ").pop()}
+                          <span className="text-[10px] font-bold text-stone-600 truncate max-w-[80px] text-center">
+                            {spouseData.person.full_name}
                           </span>
                         </button>
                       );

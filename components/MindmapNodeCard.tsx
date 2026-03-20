@@ -1,8 +1,6 @@
 "use client";
 
 import { Person } from "@/types";
-import { Info, TreePine, ChevronDown } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
 import DefaultAvatar from "./DefaultAvatar";
 
 interface MindmapNodeCardProps {
@@ -20,27 +18,16 @@ export default function MindmapNodeCard({
   onSetRoot,
   isDeceased = false,
 }: MindmapNodeCardProps) {
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   return (
     <div
-      className={`group/card relative flex flex-wrap items-center gap-2 bg-white/60 rounded-2xl border border-stone-200/60 p-2 sm:p-2.5 shadow-sm hover:border-amber-300 hover:shadow-md hover:bg-white/90 transition-all duration-300 overflow-visible
+      className={`group/card relative flex flex-col gap-2 bg-white/60 rounded-2xl border border-stone-200/60 p-2 sm:p-2.5 shadow-sm hover:border-amber-300 hover:shadow-md hover:bg-white/90 transition-all duration-300 overflow-visible
         ${isDeceased ? "opacity-80 grayscale-[0.3]" : ""}`}
     >
-      <div className="flex items-center gap-2.5 relative z-10 w-full">
+      {/* Main node content - click to set as root */}
+      <div
+        className="flex items-center gap-2.5 relative z-10 w-full cursor-pointer"
+        onClick={onSetRoot}
+      >
         <div className="flex flex-1 items-center gap-2.5 min-w-0">
           {showAvatar && (
             <div className="relative shrink-0">
@@ -93,47 +80,28 @@ export default function MindmapNodeCard({
             )}
           </div>
         </div>
-
-        {/* Action Menu Button */}
-        <div className="relative mt-1" ref={menuRef}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowMenu(!showMenu);
-            }}
-            className="flex items-center gap-1 text-[9px] text-stone-500 hover:text-amber-600 transition-colors bg-white/80 rounded-full px-2 py-0.5 shadow-sm border border-stone-200/60"
-          >
-            <ChevronDown className="size-3" />
-            Hành động
-          </button>
-
-          {/* Dropdown Menu */}
-          {showMenu && (
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-white border border-stone-200 rounded-lg shadow-lg py-1 z-[9999] min-w-[120px]">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onShowInfo();
-                }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-stone-700 hover:bg-stone-50 transition-colors"
-              >
-                <Info className="size-3" />
-                Xem thông tin
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSetRoot();
-                }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-stone-700 hover:bg-stone-50 transition-colors"
-              >
-                <TreePine className="size-3" />
-                Đặt làm gốc
-              </button>
-            </div>
-          )}
-        </div>
       </div>
+
+      {/* View details link */}
+      <button
+        onClick={onShowInfo}
+        className="flex items-center gap-1 text-[9px] text-stone-500 hover:text-amber-600 transition-colors bg-white/80 rounded-full px-2 py-0.5 shadow-sm border border-stone-200/60 self-start"
+      >
+        <svg
+          className="size-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        Xem chi tiết
+      </button>
     </div>
   );
 }
