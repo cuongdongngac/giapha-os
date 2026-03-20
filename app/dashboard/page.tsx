@@ -14,7 +14,7 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
   const { view = "list" } = await searchParams;
 
   // Get rootId from environment variable
-  const envRootId = process.env.ROOTID;
+  const envRootId = process.env.NEXT_PUBLIC_ROOTID;
 
   // If view is list, we only need persons, not relationships.
   // We fetch persons for all views to pass down as a prop if we want, or let components fetch.
