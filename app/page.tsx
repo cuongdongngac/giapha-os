@@ -1,7 +1,6 @@
 import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
 import LandingHero from "@/components/LandingHero";
-import FeaturedPosts from "@/components/FeaturedPosts";
 import config from "./config";
 
 export default function HomePage() {
@@ -21,9 +20,6 @@ export default function HomePage() {
         <div className="py-20 md:py-32 flex flex-col items-center justify-center px-4 w-full">
           <LandingHero siteName={config.siteName} />
         </div>
-        
-        {/* @ts-ignore Server Component */}
-        <FeaturedPosts />
       </main>
 
       <Footer className="bg-transparent relative z-10 border-none" />

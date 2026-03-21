@@ -10,7 +10,7 @@ export default function PublicHeader() {
 
   const navItems = [
     { href: "/", label: "Trang chủ", icon: <Home className="size-4" /> },
-    { href: "/posts", label: "Bài viết", icon: <FileText className="size-4" /> },
+    { href: "/dashboard?view=posts", label: "Bài viết", icon: <FileText className="size-4" /> },
     { href: "/about", label: "Giới thiệu", icon: <BookOpen className="size-4" /> },
   ];
 

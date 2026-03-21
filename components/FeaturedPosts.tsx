@@ -20,7 +20,7 @@ export default async function FeaturedPosts() {
           </p>
         </div>
         <Link 
-          href="/posts" 
+          href="/dashboard?view=posts" 
           className="group inline-flex items-center gap-2 text-stone-900 font-bold hover:text-amber-700 transition-colors"
         >
           Xem tất cả bài viết

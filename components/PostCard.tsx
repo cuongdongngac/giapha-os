@@ -54,7 +54,7 @@ export default function PostCard({ post, index, isAdmin, layout = "list", onSele
     >
       {/* Thumbnail */}
       <div 
-        onClick={() => onSelect ? onSelect(post) : router.push(`/posts/${post.slug}`)} 
+        onClick={() => onSelect ? onSelect(post) : router.push(`/dashboard?view=posts&postId=${post.id}`)} 
         className={`relative overflow-hidden shrink-0 cursor-pointer ${isList ? 'w-full sm:w-48 lg:w-64 h-[200px]' : 'aspect-video w-full'}`}
       >
         <div className={`w-full h-full ${isList ? 'sm:absolute sm:inset-0' : ''}`}>
@@ -93,7 +93,7 @@ export default function PostCard({ post, index, isAdmin, layout = "list", onSele
         </div>
 
         <div 
-          onClick={() => onSelect ? onSelect(post) : router.push(`/posts/${post.slug}`)} 
+          onClick={() => onSelect ? onSelect(post) : router.push(`/dashboard?view=posts&postId=${post.id}`)} 
           className="block group/title cursor-pointer"
         >
           <h3 className={`font-serif font-bold text-stone-900 group-hover/title:text-amber-700 transition-colors mb-2 line-clamp-2 leading-tight ${isList ? 'text-xl md:text-2xl' : 'text-lg md:text-xl'}`}>
@@ -103,7 +103,7 @@ export default function PostCard({ post, index, isAdmin, layout = "list", onSele
 
         {post.excerpt && (
           <div 
-            onClick={() => onSelect ? onSelect(post) : router.push(`/posts/${post.slug}`)} 
+            onClick={() => onSelect ? onSelect(post) : router.push(`/dashboard?view=posts&postId=${post.id}`)} 
             className="block cursor-pointer"
           >
             <p className="text-stone-600 text-sm md:text-base line-clamp-3 mb-6 leading-relaxed">
@@ -119,7 +119,7 @@ export default function PostCard({ post, index, isAdmin, layout = "list", onSele
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onEdit ? onEdit(post.id) : router.push(`/posts/edit/${post.id}`);
+                  onEdit ? onEdit(post.id) : router.push(`/dashboard?view=posts&editingPostId=${post.id}`);
                 }}
                 className="p-2 text-stone-400 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all"
                 title="Chỉnh sửa"
