@@ -10,6 +10,7 @@ import BranchesTable from "@/components/BranchesTable";
 import Introduction from "@/components/Introduction";
 import AudioPlayer from "@/components/AudioPlayer";
 import NotablesList from "@/components/NotablesList";
+import DashboardPostsView from "@/components/DashboardPostsView";
 import { Person, Relationship } from "@/types";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useMemo } from "react";
@@ -168,6 +169,12 @@ export default function DashboardViews({
         )}
 
         {currentView === "notables" && <NotablesList persons={persons} />}
+
+        {currentView === "posts" && (
+          <div className="max-w-7xl mx-auto py-4 w-full relative z-10">
+            <DashboardPostsView isAdmin={canEdit} />
+          </div>
+        )}
 
         <div className="flex-1 w-full relative z-10">
           {currentView === "tree" && (

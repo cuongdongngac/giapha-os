@@ -15,6 +15,13 @@ interface DashboardState {
   setRootId: (id: string | null) => void;
   maxDepth: number;
   setMaxDepth: (depth: number) => void;
+  // Post-related state
+  selectedPostId: string | null;
+  setSelectedPostId: (id: string | null) => void;
+  isCreatingPost: boolean;
+  setIsCreatingPost: (isCreating: boolean) => void;
+  editingPostId: string | null;
+  setEditingPostId: (id: string | null) => void;
 }
 
 export const DashboardContext = createContext<DashboardState | undefined>(
@@ -34,6 +41,11 @@ export function DashboardProvider({
   const [view, setViewState] = useState<ViewMode>("list");
   const [rootId, setRootIdState] = useState<string | null>(null);
   const [maxDepth, setMaxDepthState] = useState<number>(3);
+  
+  // Post states
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [isCreatingPost, setIsCreatingPost] = useState<boolean>(false);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
   // Store initialRootId in a ref to use it in setView
   const envRootIdRef = useRef(initialRootId);
@@ -41,7 +53,7 @@ export function DashboardProvider({
     envRootIdRef.current = initialRootId;
   }, [initialRootId]);
 
-  // Keep state in sync with URL query params (so deep-links can switch tabs)
+  // Keep state in sync with URL query params
   useEffect(() => {
     const avatarParam = searchParams.get("avatar");
     setShowAvatar(avatarParam !== "hide");
@@ -49,17 +61,17 @@ export function DashboardProvider({
     const viewParam = searchParams.get("view") as ViewMode;
     if (viewParam && viewParam !== view) setViewState(viewParam);
 
-    // Prioritize environment root ID, then URL parameter
     const rootIdParam = searchParams.get("rootId");
     const effectiveRootId = rootIdParam || initialRootId || null;
     if (effectiveRootId !== rootId) setRootIdState(effectiveRootId);
 
     const maxDepthParam = searchParams.get("maxDepth");
     if (maxDepthParam) setMaxDepthState(parseInt(maxDepthParam, 10));
+    
+    // Sync post states from URL if needed
+    const postId = searchParams.get("postId");
+    if (postId && selectedPostId !== postId) setSelectedPostId(postId);
 
-    // We intentionally ignore memberModalId in the Next.js router loop
-    // to avoid Next.js triggering re-renders on push.
-    // If the URL has it on first load, we grab it from window.location instead
     if (typeof window !== "undefined") {
       const sp = new URLSearchParams(window.location.search);
       const modalId = sp.get("memberModalId");
@@ -69,7 +81,6 @@ export function DashboardProvider({
     }
   }, [searchParams, memberModalId, rootId, view, initialRootId]);
 
-  // Sync to URL silently
   const updateModalId = (id: string | null) => {
     setMemberModalId(id);
     if (typeof window !== "undefined") {
@@ -89,35 +100,40 @@ export function DashboardProvider({
 
   const setView = (v: ViewMode) => {
     setViewState(v);
+    
+    // Always clear post selection states when switching views
+    updateSelectedPost(null);
+    setIsCreatingPost(false);
+    setEditingPostId(null);
+
     if (typeof window !== "undefined") {
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set("view", v);
 
-      // Always include maxDepth and rootId when switching to tree/mindmap views
       if (v === "tree" || v === "mindmap") {
-        // For mindmap, prioritize current URL rootId, fallback to environment
         if (v === "mindmap") {
           const currentRootId = newUrl.searchParams.get("rootId");
           const envRootId = envRootIdRef.current;
-
           if (currentRootId) {
-            // Use existing rootId from URL
             newUrl.searchParams.set("rootId", currentRootId);
           } else if (envRootId) {
-            // Fallback to environment variable
             newUrl.searchParams.set("rootId", envRootId);
           }
         } else {
-          // For tree, use environment variable
           const envRootId = envRootIdRef.current;
           if (envRootId) {
             newUrl.searchParams.set("rootId", envRootId);
           }
         }
-
-        // Set maxDepth (you can adjust this value as needed)
         newUrl.searchParams.set("maxDepth", "4");
       }
+      
+      // Clear post-specific URL params when switching views away from posts?
+      // Actually, keep them if useful, but maybe clear when switching back to list
+      if (v !== "posts") {
+        newUrl.searchParams.delete("postId");
+      }
+      
       window.history.replaceState(null, "", newUrl.toString());
     }
   };
@@ -144,6 +160,19 @@ export function DashboardProvider({
     }
   };
 
+  const updateSelectedPost = (id: string | null) => {
+    setSelectedPostId(id);
+    if (typeof window !== "undefined") {
+      const newUrl = new URL(window.location.href);
+      if (id) {
+        newUrl.searchParams.set("postId", id);
+      } else {
+        newUrl.searchParams.delete("postId");
+      }
+      window.history.replaceState(null, "", newUrl.toString());
+    }
+  };
+
   return (
     <DashboardContext.Provider
       value={{
@@ -157,6 +186,12 @@ export function DashboardProvider({
         setRootId,
         maxDepth,
         setMaxDepth,
+        selectedPostId,
+        setSelectedPostId: updateSelectedPost,
+        isCreatingPost,
+        setIsCreatingPost,
+        editingPostId,
+        setEditingPostId,
       }}
     >
       {children}
@@ -166,8 +201,6 @@ export function DashboardProvider({
 
 export function useDashboard(): DashboardState {
   const context = useContext(DashboardContext);
-  // Return a safe no-op fallback when used outside DashboardProvider
-  // (e.g., on the /dashboard/members/[id] standalone page)
   if (context === undefined) {
     return {
       memberModalId: null,
@@ -180,6 +213,12 @@ export function useDashboard(): DashboardState {
       setRootId: () => {},
       maxDepth: 3,
       setMaxDepth: () => {},
+      selectedPostId: null,
+      setSelectedPostId: () => {},
+      isCreatingPost: false,
+      setIsCreatingPost: () => {},
+      editingPostId: null,
+      setEditingPostId: () => {},
     };
   }
   return context;

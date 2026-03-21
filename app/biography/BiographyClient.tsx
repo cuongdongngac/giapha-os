@@ -233,7 +233,7 @@ export default function BiographyClient() {
               {/* Biography Content */}
               <div className="prose prose-lg max-w-none">
                 <div
-                  className="ck-content"
+                  className="ProseMirror"
                   dangerouslySetInnerHTML={{ __html: biographyHtml }}
                 />
               </div>
@@ -267,9 +267,9 @@ export default function BiographyClient() {
           </div>
         )}
 
-        {/* CKEditor content styles */}
+        {/* TipTap content styles */}
         <style jsx global>{`
-          .ck-content {
+          .ProseMirror {
             font-family:
               "Inter",
               -apple-system,
@@ -280,7 +280,7 @@ export default function BiographyClient() {
             line-height: 1.6;
             color: #374151;
           }
-          .ck-content h1 {
+          .ProseMirror h1 {
             font-size: 32px;
             font-weight: 700;
             margin-bottom: 16px;
@@ -288,33 +288,33 @@ export default function BiographyClient() {
             border-bottom: 2px solid #f59e0b;
             padding-bottom: 8px;
           }
-          .ck-content h2 {
+          .ProseMirror h2 {
             font-size: 26px;
             font-weight: 600;
             margin-bottom: 12px;
             color: #1f2937;
             margin-top: 24px;
           }
-          .ck-content h3 {
+          .ProseMirror h3 {
             font-size: 22px;
             font-weight: 600;
             margin-bottom: 10px;
             color: #374151;
             margin-top: 20px;
           }
-          .ck-content p {
+          .ProseMirror p {
             margin-bottom: 16px;
             line-height: 1.7;
           }
-          .ck-content ul,
-          .ck-content ol {
+          .ProseMirror ul,
+          .ProseMirror ol {
             margin-left: 24px;
             margin-bottom: 16px;
           }
-          .ck-content li {
+          .ProseMirror li {
             margin-bottom: 4px;
           }
-          .ck-content blockquote {
+          .ProseMirror blockquote {
             border-left: 4px solid #f59e0b;
             padding-left: 16px;
             margin: 16px 0;
@@ -323,7 +323,7 @@ export default function BiographyClient() {
             border-radius: 0 8px 8px 0;
             font-style: italic;
           }
-          .ck-content table {
+          .ProseMirror table {
             border-collapse: collapse;
             width: 100%;
             margin: 16px 0;
@@ -331,21 +331,21 @@ export default function BiographyClient() {
             overflow: hidden;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           }
-          .ck-content table td,
-          .ck-content table th {
+          .ProseMirror table td,
+          .ProseMirror table th {
             border: 1px solid #e5e7eb;
             padding: 12px;
             text-align: left;
           }
-          .ck-content table th {
+          .ProseMirror table th {
             background-color: #f9fafb;
             font-weight: 600;
             color: #374151;
           }
-          .ck-content table tr:nth-child(even) {
+          .ProseMirror table tr:nth-child(even) {
             background-color: #f9fafb;
           }
-          .ck-content img {
+          .ProseMirror img {
             max-width: 100%;
             height: auto;
             border-radius: 8px;

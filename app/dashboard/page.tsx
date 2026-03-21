@@ -46,12 +46,15 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
   let relationships = [];
 
   // Always fetch all persons for search/filter to work properly
+  // We optimize by only selecting necessary fields to draw the tree/list
   const { data: allPersons } = await supabase
     .from("persons")
-    .select("*")
+    .select("id, full_name, gender, birth_year, birth_month, birth_day, death_year, death_month, death_day, avatar_url, note, created_at, updated_at, is_deceased, is_in_law, is_notable, birth_order, generation, branch_id, other_names")
     .order("birth_year", { ascending: true, nullsFirst: false });
 
-  const { data: relsData } = await supabase.from("relationships").select("*");
+  const { data: relsData } = await supabase
+    .from("relationships")
+    .select("id, type, person_a, person_b, note, created_at, updated_at");
 
   personsData = allPersons || [];
   relationships = relsData || [];
@@ -84,13 +87,18 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
 
   return (
     <DashboardProvider initialRootId={finalRootId}>
-      <ViewToggle />
-      <DashboardViews
-        persons={persons}
-        relationships={relationships}
-        canEdit={canEdit}
-        finalRootId={finalRootId}
-      />
+      <div className="sticky top-0 z-50 bg-[#fafaf9]/80 backdrop-blur-md border-b border-stone-200/60 pb-2">
+        <ViewToggle />
+      </div>
+      
+      <div className="flex-1 overflow-auto">
+        <DashboardViews
+          persons={persons}
+          relationships={relationships}
+          canEdit={canEdit}
+          finalRootId={finalRootId}
+        />
+      </div>
 
       <MemberDetailModal />
     </DashboardProvider>

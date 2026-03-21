@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import RichTextEditor from '@/components/editor/RichTextEditor';
+import React, { useState } from "react";
+import RichTextEditor from "@/components/editor/RichTextEditor";
 
 export default function EditorPage() {
   const [content, setContent] = useState(
     `<h3>Tiểu sử cá nhân</h3>
 <p>Đây là nội dung mẫu để thử nghiệm trình soạn thảo.</p>
-<p>Bạn có thể chỉnh sửa văn bản, thêm danh sách, bảng biểu...</p>`
+<p>Bạn có thể chỉnh sửa văn bản, thêm danh sách, bảng biểu...</p>`,
   );
 
   const handleLogData = () => {
-    console.log('HTML Output:', content);
-    alert('Đã xuất HTML ra Console (F12)');
+    console.log("HTML Output:", content);
+    alert("Đã xuất HTML ra Console (F12)");
   };
 
   return (
@@ -35,7 +35,7 @@ export default function EditorPage() {
         </button>
         <button
           type="button"
-          onClick={() => setContent('')}
+          onClick={() => setContent("")}
           className="cursor-pointer rounded border border-gray-300 bg-gray-100 px-5 py-2.5"
         >
           Xóa
@@ -45,54 +45,51 @@ export default function EditorPage() {
       <div className="mt-10">
         <h4 className="mb-2 text-gray-600">Xem trước (Preview):</h4>
         <div
-          className="ck-content min-h-[100px] rounded-lg border border-gray-200 bg-white p-5"
+          className="ProseMirror min-h-[100px] rounded-lg border border-gray-200 bg-white p-5"
           dangerouslySetInnerHTML={{ __html: content }}
         />
       </div>
 
       <style jsx global>{`
-        .ck-content h1 {
+        .ProseMirror h1 {
           font-size: 32px;
           font-weight: 700;
           margin-bottom: 12px;
         }
-        .ck-content h2 {
+        .ProseMirror h2 {
           font-size: 26px;
           font-weight: 600;
           margin-bottom: 10px;
         }
-        .ck-content h3 {
+        .ProseMirror h3 {
           font-size: 22px;
           font-weight: 600;
           margin-bottom: 8px;
         }
-        .ck-content p {
+        .ProseMirror p {
           margin-bottom: 12px;
           line-height: 1.6;
         }
-        .ck-content ul,
-        .ck-content ol {
+        .ProseMirror ul,
+        .ProseMirror ol {
           margin-left: 20px;
           margin-bottom: 12px;
         }
-        .ck-content blockquote {
+        .ProseMirror blockquote {
           border-left: 4px solid #2fa4e7;
           padding-left: 10px;
           color: #666;
           margin: 10px 0;
         }
-        .ck-content table {
+        .ProseMirror table {
           border-collapse: collapse;
           width: 100%;
           margin-top: 10px;
         }
-        .ck-content table td,
-        .ck-content table th {
+        .ProseMirror table td,
+        .ProseMirror table th {
           border: 1px solid #ddd;
           padding: 8px;
-        }
-        .ck-toolbar {
-          border-bottom: 2px solid #2fa4e7 !important;
         }
       `}</style>
     </div>

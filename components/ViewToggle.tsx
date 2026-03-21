@@ -9,9 +9,9 @@ import {
   BookOpen,
   Filter,
   Users,
+  FileText,
 } from "lucide-react";
 import { useDashboard } from "./DashboardContext";
-import { useRouter } from "next/navigation";
 
 export type ViewMode =
   | "list"
@@ -20,17 +20,22 @@ export type ViewMode =
   | "mindmap"
   | "branches"
   | "introduction"
-  | "notables";
+  | "notables"
+  | "posts";
 
 export default function ViewToggle() {
   const { view: currentView, setView } = useDashboard();
-  const router = useRouter();
 
   const tabs = [
     {
       id: "introduction",
       label: "Giới thiệu",
       icon: <BookOpen className="size-4" />,
+    },
+    {
+      id: "posts",
+      label: "Bài viết",
+      icon: <FileText className="size-4" />,
     },
     { id: "list", label: "Danh sách", icon: <List className="size-4" /> },
     {
@@ -53,42 +58,44 @@ export default function ViewToggle() {
   ] as const;
 
   return (
-    <div className="flex bg-stone-200/50 p-1.5 rounded-full shadow-inner w-fit mx-auto mt-4 mb-2 relative border border-stone-200/60 backdrop-blur-sm z-10">
-      {tabs.map((tab) => {
-        const isActive = currentView === tab.id;
+    <div className="flex bg-stone-200/50 p-1.5 rounded-full shadow-inner w-fit mx-auto mt-4 mb-2 relative border border-stone-200/60 backdrop-blur-sm z-10 overflow-x-auto max-w-full no-scrollbar">
+      <div className="flex min-w-max">
+        {tabs.map((tab) => {
+          const isActive = currentView === tab.id;
 
-        return (
-          <button
-            key={tab.id}
-            onClick={() => {
-              setView(tab.id as ViewMode);
-            }}
-            className={`relative px-4 sm:px-6 py-1.5 sm:py-2.5 text-sm font-semibold rounded-full transition-colors duration-300 ease-in-out z-10 flex items-center gap-2 ${
-              isActive
-                ? "text-stone-900"
-                : "text-stone-500 hover:text-stone-800"
-            }`}
-          >
-            {isActive && (
-              <motion.div
-                layoutId="activeTab"
-                className="absolute inset-0 bg-white rounded-full shadow-sm border border-stone-200/60 z-[-1]"
-                transition={{ type: "spring", stiffness: 450, damping: 30 }}
-              />
-            )}
-
-            <span
-              className={`transition-colors duration-300 ${
-                isActive ? "text-amber-700" : "text-stone-400"
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setView(tab.id as ViewMode);
+              }}
+              className={`relative px-4 sm:px-6 py-1.5 sm:py-2.5 text-sm font-semibold rounded-full transition-colors duration-300 ease-in-out z-10 flex items-center gap-2 ${
+                isActive
+                  ? "text-stone-900"
+                  : "text-stone-500 hover:text-stone-800"
               }`}
             >
-              {tab.icon}
-            </span>
+              {isActive && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute inset-0 bg-white rounded-full shadow-sm border border-stone-200/60 z-[-1]"
+                  transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                />
+              )}
 
-            <span className="tracking-wide">{tab.label}</span>
-          </button>
-        );
-      })}
+              <span
+                className={`transition-colors duration-300 ${
+                  isActive ? "text-amber-700" : "text-stone-400"
+                }`}
+              >
+                {tab.icon}
+              </span>
+
+              <span className="tracking-wide whitespace-nowrap">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

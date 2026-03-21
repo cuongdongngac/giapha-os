@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import config from "./config";
 import "./globals.css";
+import "../styles/tiptap.css";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
