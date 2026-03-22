@@ -14,6 +14,7 @@ import DashboardPostsView from "@/components/DashboardPostsView";
 import DashboardPostsViewStandalone from "@/components/DashboardPostsViewStandalone";
 import FamilyDataViews from "@/components/FamilyDataViews";
 import { Person, Relationship } from "@/types";
+import { Post } from "@/app/actions/posts";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useMemo } from "react";
 
@@ -22,6 +23,8 @@ interface DashboardViewsProps {
   relationships: Relationship[];
   canEdit?: boolean;
   finalRootId?: string;
+  initialPosts?: Post[];
+  initialPostsCount?: number;
 }
 
 export default function DashboardViews({
@@ -29,6 +32,8 @@ export default function DashboardViews({
   relationships,
   canEdit = false,
   finalRootId,
+  initialPosts,
+  initialPostsCount,
 }: DashboardViewsProps) {
   const { view: currentView, rootId, maxDepth, setMaxDepth } = useDashboard();
 
@@ -65,7 +70,7 @@ export default function DashboardViews({
 
         {currentView === "posts" && (
           <div className="max-w-7xl mx-auto py-4 w-full relative z-10">
-            <DashboardPostsViewStandalone isAdmin={canEdit} />
+            <DashboardPostsViewStandalone isAdmin={canEdit} initialPosts={initialPosts} initialPostsCount={initialPostsCount} />
           </div>
         )}
       </main>

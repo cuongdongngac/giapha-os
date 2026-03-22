@@ -19,9 +19,11 @@ import {
 
 interface DashboardPostsViewStandaloneProps {
   isAdmin?: boolean;
+  initialPosts?: Post[];
+  initialPostsCount?: number;
 }
 
-export default function DashboardPostsViewStandalone({ isAdmin }: DashboardPostsViewStandaloneProps) {
+export default function DashboardPostsViewStandalone({ isAdmin, initialPosts, initialPostsCount }: DashboardPostsViewStandaloneProps) {
   const { 
     selectedPostId, setSelectedPostId,
     isCreatingPost, setIsCreatingPost,
@@ -45,7 +47,9 @@ export default function DashboardPostsViewStandalone({ isAdmin }: DashboardPosts
     page: 1,
     limit: 10,
     status: isAdmin ? 'all' : 'published',
-    autoLoad: true
+    autoLoad: true,
+    initialPosts,
+    initialCount: initialPostsCount,
   });
 
   // Load selected post detail using cached function
@@ -247,7 +251,7 @@ export default function DashboardPostsViewStandalone({ isAdmin }: DashboardPosts
         <div className="flex items-center justify-center gap-4 pt-8 border-t border-stone-100">
           <button
             disabled={page === 1}
-            onClick={() => setPage((prevPage) => prevPage - 1)}
+            onClick={() => setPage(page - 1)}
             className="flex items-center gap-1 text-sm font-bold text-stone-500 hover:text-amber-700 disabled:opacity-30 disabled:hover:text-stone-500 transition-colors"
           >
             <ChevronLeft className="size-4" />
@@ -268,7 +272,7 @@ export default function DashboardPostsViewStandalone({ isAdmin }: DashboardPosts
           </div>
           <button
             disabled={page >= Math.ceil(totalCount / 10)}
-            onClick={() => setPage((prevPage) => prevPage + 1)}
+            onClick={() => setPage(page + 1)}
             className="flex items-center gap-1 text-sm font-bold text-stone-500 hover:text-amber-700 disabled:opacity-30 disabled:hover:text-stone-500 transition-colors"
           >
             Trang sau

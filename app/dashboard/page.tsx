@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Person, Relationship } from "@/types";
+import { Post } from "@/app/actions/posts";
 
 interface PageProps {
   searchParams: Promise<{ view?: string; rootId?: string }>;
@@ -42,7 +43,32 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
   let relationships: Relationship[] = [];
   let finalRootId = envRootId;
 
-  if (view !== "posts") {
+  // Load posts server-side when viewing posts (same pattern as persons)
+  let initialPosts: Post[] = [];
+  let initialPostsCount = 0;
+
+  if (view === "posts") {
+    console.log("Loading posts server-side for posts view");
+    const status = canEdit ? "all" : "published";
+    
+    let query = supabase
+      .from("posts")
+      .select("id, title, slug, excerpt, featured_image, author_id, status, published_at, created_at, updated_at", { count: "estimated" });
+
+    if (status !== "all") {
+      query = query
+        .eq("status", status)
+        .order("published_at", { ascending: false, nullsFirst: false });
+    } else {
+      query = query
+        .order("status", { ascending: false })
+        .order("updated_at", { ascending: false, nullsFirst: false });
+    }
+
+    const { data, count } = await query.range(0, 9);
+    initialPosts = (data as Post[]) || [];
+    initialPostsCount = count || 0;
+  } else {
     console.log("Loading persons and relationships for view:", view);
 
     // For list view, implement pagination
@@ -91,8 +117,6 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
         finalRootId = persons[0].id; // ultimate fallback
       }
     }
-  } else {
-    console.log("Skipping persons/relationships load for posts view");
   }
 
   return (
@@ -107,6 +131,8 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
           relationships={relationships}
           canEdit={canEdit}
           finalRootId={finalRootId}
+          initialPosts={initialPosts}
+          initialPostsCount={initialPostsCount}
         />
       </div>
 
@@ -114,3 +140,4 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
     </DashboardProvider>
   );
 }
+

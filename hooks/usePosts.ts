@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getPosts, getPostById, Post } from '@/app/actions/posts';
 
 interface UsePostsOptions {
@@ -8,6 +8,8 @@ interface UsePostsOptions {
   limit?: number;
   status?: string;
   autoLoad?: boolean;
+  initialPosts?: Post[];
+  initialCount?: number;
 }
 
 interface UsePostsReturn {
@@ -32,12 +34,14 @@ function isCacheValid(timestamp: number): boolean {
 }
 
 export function usePosts(options: UsePostsOptions = {}): UsePostsReturn {
-  const { page: initialPage = 1, limit = 10, status = 'published', autoLoad = true } = options;  
-  const [posts, setPosts] = useState<Post[]>([]);
+  const { page: initialPage = 1, limit = 10, status = 'published', autoLoad = true, initialPosts, initialCount } = options;
+  const hasInitialData = !!(initialPosts && initialPosts.length > 0);
+  const [posts, setPosts] = useState<Post[]>(initialPosts || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [totalCount, setTotalCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(initialCount || 0);
   const [page, setPage] = useState(initialPage);
+  const initialDataUsed = useRef(hasInitialData);
 
   // Create cache key that includes status for better separation
   const cacheKey = `posts_${status}_${page}_${limit}`;
@@ -129,8 +133,13 @@ export function usePosts(options: UsePostsOptions = {}): UsePostsReturn {
   }, []);
 
   // Auto-load on mount and when dependencies change
+  // Skip the first load if we already have server-side initial data
   useEffect(() => {
     if (autoLoad) {
+      if (initialDataUsed.current) {
+        initialDataUsed.current = false;
+        return;
+      }
       loadPosts();
     }
   }, [loadPosts, autoLoad]);

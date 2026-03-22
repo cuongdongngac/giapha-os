@@ -286,7 +286,7 @@ export default function DashboardPostsView({
         <div className="flex items-center justify-center gap-4 pt-8 border-t border-stone-100">
           <button
             disabled={page === 1}
-            onClick={() => setPage((prevPage) => prevPage - 1)}
+            onClick={() => setPage(page - 1)}
             className="flex items-center gap-1 text-sm font-bold text-stone-500 hover:text-amber-700 disabled:opacity-30 disabled:hover:text-stone-500 transition-colors"
           >
             <ChevronLeft className="size-4" />
@@ -312,7 +312,7 @@ export default function DashboardPostsView({
           </div>
           <button
             disabled={page >= Math.ceil(totalCount / 10)}
-            onClick={() => setPage((prevPage) => prevPage + 1)}
+            onClick={() => setPage(page + 1)}
             className="flex items-center gap-1 text-sm font-bold text-stone-500 hover:text-amber-700 disabled:opacity-30 disabled:hover:text-stone-500 transition-colors"
           >
             Trang sau
