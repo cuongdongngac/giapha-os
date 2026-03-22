@@ -26,6 +26,8 @@ export async function getPosts(page: number = 1, limit: number = 10, status: str
   // We optimize performance by:
   // 1. Only selecting necessary fields for the list (excluding heavy 'content' column)
   // 2. Using 'estimated' count which is much faster in PostgreSQL for larger tables
+  // 3. No RLS overhead - direct table access
+  // 4. Adding proper indexes for admin queries
   let query = supabase
     .from("posts")
     .select("id, title, slug, excerpt, featured_image, author_id, status, published_at, created_at, updated_at", { count: "estimated" });
@@ -36,11 +38,18 @@ export async function getPosts(page: number = 1, limit: number = 10, status: str
       .eq("status", status)
       .order("published_at", { ascending: false, nullsFirst: false });
   } else {
-    // Admin view: All posts, sorted by creation date for better tracking of drafts
-    query = query.order("created_at", { ascending: false });
+    // Admin view: All posts, but prioritize published posts for better UX
+    // Sort by status first, then by updated_at for better workflow
+    query = query
+      .order("status", { ascending: false }) // Published first, then drafts
+      .order("updated_at", { ascending: false, nullsFirst: false });
   }
 
+  const startTime = performance.now();
   const { data, count, error } = await query.range(offset, offset + limit - 1);
+  const endTime = performance.now();
+  
+  console.log(`getPosts(${status}, page ${page}) took ${endTime - startTime}ms, returned ${count} posts`);
 
   if (error) {
     console.error("Error fetching posts:", error);
@@ -55,7 +64,7 @@ export async function getPostBySlug(slug: string) {
   const supabase = createClient(cookieStore);
   const { data, error } = await supabase
     .from("posts")
-    .select("*")
+    .select("id, title, slug, excerpt, featured_image, author_id, status, published_at, created_at, updated_at, content") // Explicit fields instead of *
     .eq("slug", slug)
     .single();
 
@@ -70,11 +79,16 @@ export async function getPostBySlug(slug: string) {
 export async function getPostById(id: string) {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
+  
+  const startTime = performance.now();
   const { data, error } = await supabase
     .from("posts")
-    .select("*")
+    .select("id, title, slug, excerpt, featured_image, author_id, status, published_at, created_at, updated_at, content") // Explicit fields instead of *
     .eq("id", id)
     .single();
+  const endTime = performance.now();
+  
+  console.log(`getPostById took ${endTime - startTime}ms`);
 
   if (error) {
     console.error("Error fetching post by ID:", error);

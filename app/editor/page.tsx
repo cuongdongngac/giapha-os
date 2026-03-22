@@ -45,7 +45,7 @@ export default function EditorPage() {
       <div className="mt-10">
         <h4 className="mb-2 text-gray-600">Xem trước (Preview):</h4>
         <div
-          className="ProseMirror min-h-[100px] rounded-lg border border-gray-200 bg-white p-5"
+          className="rendered-html-content min-h-[100px] rounded-lg border border-gray-200 bg-white p-5"
           dangerouslySetInnerHTML={{ __html: content }}
         />
       </div>
@@ -67,8 +67,21 @@ export default function EditorPage() {
           margin-bottom: 8px;
         }
         .ProseMirror p {
-          margin-bottom: 12px;
+          margin-bottom: 16px !important;
           line-height: 1.6;
+          display: block;
+          min-height: 1.6em;
+        }
+
+        .ProseMirror .my-paragraph {
+          margin-bottom: 16px !important;
+          line-height: 1.6;
+          display: block;
+          min-height: 1.6em;
+        }
+
+        .ProseMirror p:not(:last-child) {
+          margin-bottom: 16px !important;
         }
         .ProseMirror ul,
         .ProseMirror ol {

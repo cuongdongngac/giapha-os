@@ -160,10 +160,7 @@ export default function DashboardPostsView({
           </header>
 
           <div
-            className="prose prose-stone prose-amber max-w-none 
-              prose-headings:font-serif prose-headings:font-bold 
-              prose-p:text-stone-600 prose-p:leading-relaxed prose-p:text-lg
-              prose-img:rounded-2xl prose-img:border prose-img:border-stone-200"
+            className="rendered-html-content max-w-none text-stone-600 leading-relaxed text-lg"
             dangerouslySetInnerHTML={{ __html: selectedPost.content || "" }}
           />
         </article>

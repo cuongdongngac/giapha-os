@@ -231,9 +231,8 @@ export default function BiographyClient() {
               )}
 
               {/* Biography Content */}
-              <div className="prose prose-lg max-w-none">
+              <div className="rendered-html-content max-w-none">
                 <div
-                  className="ProseMirror"
                   dangerouslySetInnerHTML={{ __html: biographyHtml }}
                 />
               </div>

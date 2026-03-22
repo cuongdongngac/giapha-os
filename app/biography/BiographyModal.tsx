@@ -98,7 +98,7 @@ export default function BiographyClient() {
           </div>
         ) : biographyHtml ? (
           <div
-            className="prose max-w-none"
+            className="rendered-html-content max-w-none"
             dangerouslySetInnerHTML={{ __html: biographyHtml }}
           />
         ) : (

@@ -22,6 +22,8 @@ import Code from "@tiptap/extension-code";
 import CodeBlock from "@tiptap/extension-code-block";
 import HorizontalRule from "@tiptap/extension-horizontal-rule";
 import Placeholder from "@tiptap/extension-placeholder";
+import { Paragraph } from "@tiptap/extension-paragraph";
+import { HardBreak } from "@tiptap/extension-hard-break";
 
 export interface TipTapEditorProps {
   value: string;
@@ -315,6 +317,14 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         >
           —
         </button>
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().setHardBreak().run()}
+          className="p-2 rounded hover:bg-gray-200"
+          title="Line Break"
+        >
+          ⏎
+        </button>
       </div>
 
       {/* History */}
@@ -353,6 +363,12 @@ export function TipTapEditor({
     extensions: [
       StarterKit.configure({
         heading: false, // We'll use our own heading extension
+        paragraph: false, // We'll use our own paragraph extension
+      }),
+      Paragraph.configure({
+        HTMLAttributes: {
+          class: "my-paragraph",
+        },
       }),
       Heading.configure({
         levels: [1, 2, 3],
@@ -387,6 +403,7 @@ export function TipTapEditor({
       Code,
       CodeBlock,
       HorizontalRule,
+      HardBreak,
       Placeholder.configure({
         placeholder,
       }),
