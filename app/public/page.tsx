@@ -20,6 +20,14 @@ export default function PublicPage() {
   useEffect(() => {
     const autoLoginAsGuest = async () => {
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          console.log("User already logged in, proceeding to dashboard.");
+          window.location.href = "/dashboard?view=list";
+          return;
+        }
+
         // Check if environment variables are available
         const guestEmail =
           process.env.NEXT_PUBLIC_GUEST_EMAIL || "guest@hophamdongngac.org";
@@ -56,8 +64,9 @@ export default function PublicPage() {
 
         console.log("Guest login successful:", authData);
 
-        // Redirect to dashboard after successful login
-        router.push("/dashboard?view=list");
+        // Redirect to dashboard after successful login using window.location.href
+        // This ensures a full page reload and bypasses any cached redirects to /login in the Next.js Client Router Cache
+        window.location.href = "/dashboard?view=list";
       } catch (err) {
         console.error("Auto login error:", err);
         setError("Không thể tải dữ liệu gia phả");

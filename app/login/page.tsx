@@ -44,7 +44,8 @@ export default function LoginPage() {
       if (error) {
         setError(error.message);
       } else {
-        router.push("/dashboard");
+        // Use window.location.href to bypass Next.js Client Router Cache that might hold a stale redirect from middleware
+        window.location.href = "/dashboard";
       }
     } catch (err: any) {
       setError("Có lỗi xảy ra. Vui lòng thử lại.");
