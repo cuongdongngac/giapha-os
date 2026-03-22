@@ -68,7 +68,7 @@ export default function NotablesList({ persons }: { persons: Person[] }) {
             Danh nhân dòng họ
           </h1>
         </div>
-        <p className="text-stone-600 max-w-2xl">
+        <p className="text-stone-600">
           Những thành viên nổi bật của dòng họ, có đóng góp quan trọng và được
           ghi nhận trong lịch sử gia tộc. (kéo xuống để xem danh sách)
         </p>
@@ -137,9 +137,9 @@ export default function NotablesList({ persons }: { persons: Person[] }) {
 
       {/* Notables Grid */}
       {sortedPersons.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           {sortedPersons.map((person) => (
-            <div key={person.id} className="relative">
+            <div key={person.id} className="relative h-full">
               {/* Notable Badge */}
               <div className="absolute -top-2 -right-2 z-20">
                 <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg border-2 border-white">

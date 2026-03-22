@@ -27,7 +27,7 @@ export default function PersonCard({ person }: PersonCardProps) {
   return (
     <button
       onClick={() => setMemberModalId(person.id)}
-      className={`group block relative bg-white/60 p-2 sm:p-4 rounded-2xl shadow-sm border border-stone-200/60 hover:border-amber-300 hover:shadow-md hover:bg-white/90 transition-all duration-300 overflow-hidden
+      className={`group flex flex-col text-left relative bg-white/60 p-2 sm:p-4 rounded-2xl shadow-sm border border-stone-200/60 hover:border-amber-300 hover:shadow-md hover:bg-white/90 transition-all duration-300 overflow-hidden h-full w-full
         ${isDeceased ? "opacity-80 grayscale-[0.3]" : ""}`}
     >
       {/* Decorative gradient blob */}
@@ -35,7 +35,7 @@ export default function PersonCard({ person }: PersonCardProps) {
         className={`absolute -right-10 -top-10 w-32 h-32 rounded-full blur-[50px] opacity-20 transition-all duration-500 group-hover:opacity-40 group-hover:scale-125 ${person.gender === "male" ? "bg-sky-400" : person.gender === "female" ? "bg-rose-400" : "bg-stone-400"}`}
       /> */}
 
-      <div className="flex items-center space-x-4 relative z-10">
+      <div className="flex items-center space-x-4 relative z-10 flex-1 w-full">
         <div className="relative">
           <div
             className={`h-14 w-14 sm:h-16 sm:w-16 rounded-full flex items-center justify-center text-xl font-bold text-white overflow-hidden shrink-0 shadow-lg ring-2 ring-white transition-transform duration-300 group-hover:scale-105
@@ -162,7 +162,7 @@ export default function PersonCard({ person }: PersonCardProps) {
       </div>
 
       {/* Truy Vết Tổ Tiên Button */}
-      <div className="px-2 pb-2">
+      <div className="px-2 pt-4 w-full mt-auto">
         <Link
           href={`/dashboard/lineage-trace?personId=${person.id}`}
           onClick={(e) => e.stopPropagation()}
