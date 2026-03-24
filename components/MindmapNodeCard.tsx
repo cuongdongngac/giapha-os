@@ -30,7 +30,13 @@ export default function MindmapNodeCard({
       >
         <div className="flex flex-1 items-center gap-2.5 min-w-0">
           {showAvatar && (
-            <div className="relative shrink-0">
+            <div 
+              className="relative shrink-0 cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                onShowInfo();
+              }}
+            >
               <div
                 className={`size-10 rounded-full overflow-hidden flex items-center justify-center text-white text-xs font-bold shadow-md ring-2 ring-white transition-transform duration-300 group-hover/card:scale-105
                   ${
@@ -82,26 +88,7 @@ export default function MindmapNodeCard({
         </div>
       </div>
 
-      {/* View details link */}
-      <button
-        onClick={onShowInfo}
-        className="flex items-center gap-1 text-[9px] text-stone-500 hover:text-amber-600 transition-colors bg-white/80 rounded-full px-2 py-0.5 shadow-sm border border-stone-200/60 self-start"
-      >
-        <svg
-          className="size-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-        Xem chi tiết
-      </button>
+
     </div>
   );
 }
