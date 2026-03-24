@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 
 import { Person, Relationship } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { Filter, Image as ImageIcon, ZoomIn, ZoomOut } from "lucide-react";
+import { Filter, Image as ImageIcon, ZoomIn, ZoomOut, Plus, Minus } from "lucide-react";
 import { useDashboard } from "./DashboardContext";
 import ExportButton from "./ExportButton";
 import FamilyNodeCard from "./FamilyNodeCard";
@@ -41,6 +41,20 @@ export default function FamilyTree({
   const { showAvatar, setShowAvatar, maxDepth } = useDashboard();
   const filtersRef = useRef<HTMLDivElement>(null);
   const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
+  const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
+
+  const toggleNodeCollapse = (personId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCollapsedNodes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(personId)) {
+        newSet.delete(personId);
+      } else {
+        newSet.add(personId);
+      }
+      return newSet;
+    });
+  };
 
   useEffect(() => {
     setPortalNode(document.getElementById("tree-toolbar-portal"));
@@ -186,23 +200,22 @@ export default function FamilyTree({
     const data = getTreeData(personId);
     if (!data.person) return null;
 
+    const isCollapsed = collapsedNodes.has(personId);
+    const hasChildren = data.children.length > 0 && level < maxDepth;
+
     return (
-      <li>
-        <div className="node-container inline-flex flex-col items-center">
+      <li className="relative">
+        <div className="node-container inline-flex flex-col items-center relative">
           {/* Main Person & Spouses Row */}
           <div className="flex relative z-10 bg-white rounded-2xl shadow-md border border-stone-200/80 transition-opacity">
             <FamilyNodeCard person={data.person} />
 
             {data.spouses.length > 0 && (
               <>
-                {/* <div className="mt-6 size-5 sm:w-6 sm:h-6 rounded-full shadow-sm bg-white border border-stone-200 z-20 flex items-center justify-center text-[10px] sm:text-xs">
-                  💍
-                </div> */}
                 {data.spouses.map((spouseData, idx) => (
                   <div key={spouseData.person.id} className="flex relative">
                     <FamilyNodeCard
                       isRingVisible={idx === 0}
-                      isPlusVisible={idx > 0}
                       person={spouseData.person}
                       role={
                         spouseData.person.gender === "male" ? "Chồng" : "Vợ"
@@ -214,10 +227,21 @@ export default function FamilyTree({
               </>
             )}
           </div>
+
+          {/* Expand/Collapse Button */}
+          {hasChildren && (
+            <button
+              onClick={(e) => toggleNodeCollapse(personId, e)}
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 bg-white border border-stone-300 rounded-full w-5 h-5 flex items-center justify-center text-stone-500 hover:text-stone-800 hover:bg-stone-50 hover:border-stone-400 shadow-[0_1px_3px_rgba(0,0,0,0.1)] z-20 focus:outline-none transition-all cursor-pointer"
+              title={isCollapsed ? "Mở rộng" : "Thu gọn"}
+            >
+              {isCollapsed ? <Plus strokeWidth={3} className="size-3" /> : <Minus strokeWidth={3} className="size-3" />}
+            </button>
+          )}
         </div>
 
-        {/* Render Children (if any) and level is within maxDepth */}
-        {data.children.length > 0 && level < maxDepth && (
+        {/* Render Children (if any) and not collapsed */}
+        {!isCollapsed && hasChildren && (
           <ul>
             {data.children.map((child) => (
               <React.Fragment key={child.id}>

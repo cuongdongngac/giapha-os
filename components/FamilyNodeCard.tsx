@@ -1,7 +1,6 @@
 "use client";
 
 import { Person } from "@/types";
-import { Plus } from "lucide-react";
 import Image from "next/image";
 import { useDashboard } from "./DashboardContext";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -16,7 +15,6 @@ interface FamilyNodeCardProps {
   isExpandable?: boolean;
   isExpanded?: boolean;
   isRingVisible?: boolean;
-  isPlusVisible?: boolean;
 }
 
 export default function FamilyNodeCard({
@@ -28,7 +26,6 @@ export default function FamilyNodeCard({
   isExpandable = false,
   isExpanded = false,
   isRingVisible = false,
-  isPlusVisible = false,
 }: FamilyNodeCardProps) {
   const { showAvatar, setMemberModalId } = useDashboard();
   const router = useRouter();
@@ -64,11 +61,6 @@ export default function FamilyNodeCard({
       {isRingVisible && (
         <div className="absolute top-[15%] -left-2.5 sm:-left-4 size-5 sm:size-6 rounded-full shadow-sm bg-white z-100 flex items-center justify-center text-[10px] sm:text-sm">
           <span className="leading-none pt-px pl-0.5">💍</span>
-        </div>
-      )}
-      {isPlusVisible && (
-        <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
-          <Plus className="w-2.5 h-2.5 text-white" />
         </div>
       )}
 
