@@ -111,20 +111,15 @@ export function DashboardProvider({
       newUrl.searchParams.set("view", v);
 
       if (v === "tree" || v === "mindmap") {
-        if (v === "mindmap") {
-          const currentRootId = newUrl.searchParams.get("rootId");
-          const envRootId = envRootIdRef.current;
-          if (currentRootId) {
-            newUrl.searchParams.set("rootId", currentRootId);
-          } else if (envRootId) {
-            newUrl.searchParams.set("rootId", envRootId);
-          }
-        } else {
-          const envRootId = envRootIdRef.current;
-          if (envRootId) {
-            newUrl.searchParams.set("rootId", envRootId);
-          }
+        const currentRootId = rootId || newUrl.searchParams.get("rootId");
+        const envRootId = envRootIdRef.current;
+        
+        if (currentRootId) {
+          newUrl.searchParams.set("rootId", currentRootId);
+        } else if (envRootId) {
+          newUrl.searchParams.set("rootId", envRootId);
         }
+        
         newUrl.searchParams.set("maxDepth", "4");
       }
       

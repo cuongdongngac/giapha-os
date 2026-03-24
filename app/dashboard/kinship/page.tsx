@@ -17,16 +17,29 @@ export default async function KinshipPage() {
 
   if (!user) redirect("/login");
 
-  const { data: persons } = await supabase
-    .from("persons")
-    .select(
-      "id, full_name, gender, birth_year, birth_order, generation, is_in_law",
-    )
-    .order("birth_year", { ascending: true, nullsFirst: false });
+  // Helper to fetch all records bypassing the 1000 limit
+  async function fetchAll(table: string, columns: string, orderColumn?: string) {
+    let allData: any[] = [];
+    let page = 0;
+    const pageSize = 1000;
+    while (true) {
+      let query = supabase.from(table).select(columns).range(page * pageSize, (page + 1) * pageSize - 1);
+      if (orderColumn) {
+        query = query.order(orderColumn, { ascending: true, nullsFirst: false });
+      }
+      const { data, error } = await query;
+      if (error) break;
+      if (data && data.length > 0) {
+        allData = [...allData, ...data];
+        if (data.length < pageSize) break;
+      } else { break; }
+      page++;
+    }
+    return allData;
+  }
 
-  const { data: relationships } = await supabase
-    .from("relationships")
-    .select("type, person_a, person_b");
+  const persons = await fetchAll("persons", "id, full_name, gender, birth_year, birth_order, generation, is_in_law", "birth_year");
+  const relationships = await fetchAll("relationships", "type, person_a, person_b");
 
   return (
     <div className="flex-1 w-full relative flex flex-col pb-12">

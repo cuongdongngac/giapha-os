@@ -116,30 +116,50 @@ export async function exportData(
   if ("error" in supabaseResult) return supabaseResult;
   const supabase = supabaseResult;
 
-  // Fetch ALL persons and relationships first to perform traversal in memory.
-  // This is safe since typical family trees are < 10,000 nodes, easily fitting in memory.
-  const { data: allPersons, error: personsError } = await supabase
-    .from("persons")
-    .select(
-      "id, full_name, gender, birth_year, birth_month, birth_day, death_year, death_month, death_day, is_deceased, is_in_law, birth_order, generation, other_names, avatar_url, note, created_at, updated_at",
-    )
-    .order("created_at", { ascending: true });
+  // Helper to fetch all records bypassing the 1000 limit
+  async function fetchAll(table: string, columns: string, orderColumn: string) {
+    let allData: any[] = [];
+    let page = 0;
+    const pageSize = 1000;
+    while (true) {
+      const { data, error } = await supabase
+        .from(table)
+        .select(columns)
+        .order(orderColumn, { ascending: true })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+      
+      if (error) throw error;
+      if (data && data.length > 0) {
+        allData = [...allData, ...data];
+        if (data.length < pageSize) break;
+      } else {
+        break;
+      }
+      page++;
+    }
+    return allData;
+  }
 
-  if (personsError)
-    return { error: "Lỗi tải dữ liệu persons: " + personsError.message };
+  let exportPersons: PersonExport[] = [];
+  let exportRels: RelationshipExport[] = [];
 
-  const { data: allRels, error: relationshipsError } = await supabase
-    .from("relationships")
-    .select("id, type, person_a, person_b, created_at, updated_at")
-    .order("created_at", { ascending: true });
+  try {
+    const personsData = await fetchAll(
+      "persons", 
+      "id, full_name, gender, birth_year, birth_month, birth_day, death_year, death_month, death_day, is_deceased, is_in_law, birth_order, generation, other_names, avatar_url, note, created_at, updated_at", 
+      "created_at"
+    );
+    exportPersons = personsData as PersonExport[];
 
-  if (relationshipsError)
-    return {
-      error: "Lỗi tải dữ liệu relationships: " + relationshipsError.message,
-    };
-
-  let exportPersons = (allPersons ?? []) as PersonExport[];
-  let exportRels = (allRels ?? []) as RelationshipExport[];
+    const relsData = await fetchAll(
+      "relationships", 
+      "id, type, person_a, person_b, created_at, updated_at", 
+      "created_at"
+    );
+    exportRels = relsData as RelationshipExport[];
+  } catch (error: any) {
+    return { error: "Lỗi tải dữ liệu: " + error.message };
+  }
 
   // If a root person is selected, filter the export to only their subtree
   if (exportRootId && exportPersons.some((p) => p.id === exportRootId)) {

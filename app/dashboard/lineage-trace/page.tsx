@@ -417,14 +417,34 @@ function LineagePageContent() {
       try {
         const supabase = createClient();
 
-        const { data: personsData } = await supabase
-          .from("persons")
-          .select("*")
-          .order("birth_year", { ascending: true, nullsFirst: false });
+        // Helper to fetch all records bypassing the 1000 limit
+        async function fetchAll(table: string, columns: string, orderColumn?: string) {
+          let allData: any[] = [];
+          let page = 0;
+          const pageSize = 1000;
+          while (true) {
+            let query = supabase.from(table).select(columns).range(page * pageSize, (page + 1) * pageSize - 1);
+            if (orderColumn) {
+              query = query.order(orderColumn, { ascending: true, nullsFirst: false });
+            }
+            const { data, error } = await query;
+            if (error) {
+              console.error(`Error fetching ${table}:`, error);
+              break;
+            }
+            if (data && data.length > 0) {
+              allData = [...allData, ...data];
+              if (data.length < pageSize) break;
+            } else {
+              break;
+            }
+            page++;
+          }
+          return allData;
+        }
 
-        const { data: relationshipsData } = await supabase
-          .from("relationships")
-          .select("*");
+        const personsData = await fetchAll("persons", "*", "birth_year");
+        const relationshipsData = await fetchAll("relationships", "*");
 
         const { data: branchesData } = await supabase
           .from("branches")

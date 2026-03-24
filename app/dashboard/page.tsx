@@ -13,7 +13,7 @@ interface PageProps {
 }
 
 export default async function FamilyTreePage({ searchParams }: PageProps) {
-  const { view = "list" } = await searchParams;
+  const { view = "list", rootId: queryRootId } = await searchParams;
 
   // Get rootId from environment variable
   const envRootId = process.env.NEXT_PUBLIC_ROOTID;
@@ -41,7 +41,7 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
   // This is the key optimization - avoid loading huge datasets when not needed
   let persons: Person[] = [];
   let relationships: Relationship[] = [];
-  let finalRootId = envRootId;
+  let finalRootId = queryRootId || envRootId;
 
   // Load posts server-side when viewing posts (same pattern as persons)
   let initialPosts: Post[] = [];
@@ -75,23 +75,39 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
     const pageSize = 50; // 50 members per page
     const page = 1; // Get from search params later
 
-    let personsData = [];
-    let relationships = [];
+    let personsData: any[] = [];
+    let relationships: any[] = [];
+    let relsData: any[] = [];
 
-    // Always fetch all persons for search/filter to work properly
-    // We optimize by only selecting necessary fields to draw the tree/list
-    const { data: allPersons } = await supabase
-      .from("persons")
-      .select(
-        "id, full_name, gender, birth_year, birth_month, birth_day, death_year, death_month, death_day, avatar_url, note, created_at, updated_at, is_deceased, is_in_law, is_notable, birth_order, generation, branch_id, other_names",
-      )
-      .order("birth_year", { ascending: true, nullsFirst: false });
+    // Helper to fetch all records bypassing the 1000 limit
+    async function fetchAll(table: string, columns: string, orderColumn?: string) {
+      let allData: any[] = [];
+      let page = 0;
+      const pageSize = 1000;
+      while (true) {
+        let query = supabase.from(table).select(columns).range(page * pageSize, (page + 1) * pageSize - 1);
+        if (orderColumn) {
+          query = query.order(orderColumn, { ascending: true, nullsFirst: false });
+        }
+        const { data, error } = await query;
+        if (error) {
+          console.error(`Error fetching ${table}:`, error);
+          break;
+        }
+        if (data && data.length > 0) {
+          allData = [...allData, ...data];
+          if (data.length < pageSize) break;
+        } else {
+          break;
+        }
+        page++;
+      }
+      return allData;
+    }
 
-    const { data: relsData } = await supabase
-      .from("relationships")
-      .select("id, type, person_a, person_b, note, created_at, updated_at");
+    personsData = await fetchAll("persons", "id, full_name, gender, birth_year, birth_month, birth_day, death_year, death_month, death_day, avatar_url, note, created_at, updated_at, is_deceased, is_in_law, is_notable, birth_order, generation, branch_id, other_names", "birth_year");
+    relsData = await fetchAll("relationships", "id, type, person_a, person_b, note, created_at, updated_at");
 
-    personsData = allPersons || [];
     relationships = relsData || [];
 
     persons = personsData as Person[];

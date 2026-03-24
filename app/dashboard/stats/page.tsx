@@ -17,10 +17,26 @@ export default async function StatsPage() {
 
   if (!user) redirect("/login");
 
-  const { data: persons } = await supabase.from("persons").select("*");
-  const { data: relationships } = await supabase
-    .from("relationships")
-    .select("*");
+  // Helper to fetch all records bypassing the 1000 limit
+  async function fetchAll(table: string) {
+    let allData: any[] = [];
+    let page = 0;
+    const pageSize = 1000;
+    while (true) {
+      let query = supabase.from(table).select("*").range(page * pageSize, (page + 1) * pageSize - 1);
+      const { data, error } = await query;
+      if (error) break;
+      if (data && data.length > 0) {
+        allData = [...allData, ...data];
+        if (data.length < pageSize) break;
+      } else { break; }
+      page++;
+    }
+    return allData;
+  }
+
+  const persons = await fetchAll("persons");
+  const relationships = await fetchAll("relationships");
 
   return (
     <div className="flex-1 w-full relative flex flex-col pb-12">
