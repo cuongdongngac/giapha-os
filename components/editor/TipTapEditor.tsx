@@ -24,6 +24,7 @@ import HorizontalRule from "@tiptap/extension-horizontal-rule";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Paragraph } from "@tiptap/extension-paragraph";
 import { HardBreak } from "@tiptap/extension-hard-break";
+import { Iframe, VideoHtml, Source, Track } from "./extensions/MediaExtensions";
 
 export interface TipTapEditorProps {
   value: string;
@@ -59,6 +60,13 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
     }
 
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  }, [editor]);
+
+  const insertEmbedCode = useCallback(() => {
+    const embedCode = window.prompt("Nhập mã nhúng (Embed HTML) của Iframe hoặc Video:");
+    if (embedCode) {
+      editor.commands.insertContent(embedCode);
+    }
   }, [editor]);
 
   return (
@@ -255,6 +263,14 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         >
           🖼
         </button>
+        <button
+          type="button"
+          onClick={insertEmbedCode}
+          className="p-2 rounded hover:bg-gray-200"
+          title="Embed Video / Iframe"
+        >
+          🎬
+        </button>
       </div>
 
       {/* Table */}
@@ -404,6 +420,10 @@ export function TipTapEditor({
       CodeBlock,
       HorizontalRule,
       HardBreak,
+      Iframe,
+      VideoHtml,
+      Source,
+      Track,
       Placeholder.configure({
         placeholder,
       }),
