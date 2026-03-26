@@ -17,13 +17,14 @@ import {
   TreePine,
   Crown,
   Printer,
+  X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import MemberDetailModal from "@/components/MemberDetailModal";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import { DashboardProvider, useDashboard } from "@/components/DashboardContext";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 // Simple export function for lineage
 function LineageExportButton({
@@ -359,7 +360,9 @@ function LineageExportButton({
         >
           <Download className="w-4 h-4" />
           <span>Xuất file</span>
-          <ChevronDown className={`w-4 h-4 transition-transform ${showMenu ? 'rotate-180' : ''}`} />
+          <ChevronDown
+            className={`w-4 h-4 transition-transform ${showMenu ? "rotate-180" : ""}`}
+          />
         </button>
 
         <AnimatePresence>
@@ -401,8 +404,11 @@ function LineageExportButton({
 
 function LineagePageContent() {
   const { setMemberModalId } = useDashboard();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const personId = searchParams.get("personId");
+  const isFromModal = searchParams.get("source") === "modal";
+
   const [persons, setPersons] = useState<Person[]>([]);
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
@@ -411,20 +417,38 @@ function LineagePageContent() {
   const [loading, setLoading] = useState(true);
   const lineageRef = useRef<HTMLDivElement>(null);
 
+  const handleBack = () => {
+    if (isFromModal) {
+      window.close();
+    } else {
+      router.push("/dashboard");
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const supabase = createClient();
 
         // Helper to fetch all records bypassing the 1000 limit
-        async function fetchAll(table: string, columns: string, orderColumn?: string) {
+        async function fetchAll(
+          table: string,
+          columns: string,
+          orderColumn?: string,
+        ) {
           let allData: any[] = [];
           let page = 0;
           const pageSize = 1000;
           while (true) {
-            let query = supabase.from(table).select(columns).range(page * pageSize, (page + 1) * pageSize - 1);
+            let query = supabase
+              .from(table)
+              .select(columns)
+              .range(page * pageSize, (page + 1) * pageSize - 1);
             if (orderColumn) {
-              query = query.order(orderColumn, { ascending: true, nullsFirst: false });
+              query = query.order(orderColumn, {
+                ascending: true,
+                nullsFirst: false,
+              });
             }
             const { data, error } = await query;
             if (error) {
@@ -590,14 +614,17 @@ function LineagePageContent() {
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                className="print:hidden"
               >
-                <Link
-                  href="/dashboard"
+                <button
+                  onClick={handleBack}
                   className="flex items-center space-x-2 px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-xl transition-all duration-300 border border-white/30 shadow-md"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  <span className="font-medium">Quay về Dashboard</span>
-                </Link>
+                  <span className="font-medium">
+                    {isFromModal ? "Đóng trang" : "Quay về Dashboard"}
+                  </span>
+                </button>
               </motion.div>
             </div>
           </div>
@@ -812,12 +839,14 @@ function LineageDisplay({
             className="flex-1 text-left bg-white border border-stone-200 rounded-2xl p-4 hover:border-amber-400 hover:shadow-md transition-all group relative overflow-hidden"
           >
             <div className="flex items-center gap-4 relative z-10">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-sm ${
-                person.gender === 'female' ? 'bg-rose-400' : 'bg-sky-400'
-              }`}>
+              <div
+                className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-sm ${
+                  person.gender === "female" ? "bg-rose-400" : "bg-sky-400"
+                }`}
+              >
                 {person.full_name.charAt(0)}
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h3 className="font-bold text-stone-900 truncate group-hover:text-amber-700 transition-colors">
@@ -827,24 +856,33 @@ function LineageDisplay({
                     {getRelationshipTitle(index)}
                   </span>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-500">
                   {person.birth_year && (
                     <span className="flex items-center gap-1">
                       <span className="w-1 h-1 rounded-full bg-stone-300" />
-                      Năm sinh: <span className="font-semibold text-stone-700">{person.birth_year}</span>
+                      Năm sinh:{" "}
+                      <span className="font-semibold text-stone-700">
+                        {person.birth_year}
+                      </span>
                     </span>
                   )}
                   {person.generation && (
                     <span className="flex items-center gap-1">
                       <span className="w-1 h-1 rounded-full bg-stone-300" />
-                      Đời: <span className="font-semibold text-stone-700">{person.generation}</span>
+                      Đời:{" "}
+                      <span className="font-semibold text-stone-700">
+                        {person.generation}
+                      </span>
                     </span>
                   )}
                   {person.branch_id && (
                     <span className="flex items-center gap-1">
                       <span className="w-1 h-1 rounded-full bg-stone-300" />
-                      Chi: <span className="font-semibold text-stone-700">{getBranchName(person.branch_id)}</span>
+                      Chi:{" "}
+                      <span className="font-semibold text-stone-700">
+                        {getBranchName(person.branch_id)}
+                      </span>
                     </span>
                   )}
                 </div>
@@ -855,7 +893,7 @@ function LineageDisplay({
                   {getGenerationTitle(index)}
                 </div>
                 <div className="text-xs text-stone-400 italic">
-                  {person.gender === 'female' ? 'Bà' : 'Ông'}
+                  {person.gender === "female" ? "Bà" : "Ông"}
                 </div>
               </div>
             </div>

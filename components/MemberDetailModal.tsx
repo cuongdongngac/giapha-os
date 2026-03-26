@@ -5,7 +5,14 @@ import MemberForm from "@/components/MemberForm";
 import { Person } from "@/types";
 import { createClient } from "@/utils/supabase/client";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, ArrowLeft, Edit2, ExternalLink, X } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Edit2,
+  ExternalLink,
+  GitBranch,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -185,6 +192,14 @@ export default function MemberDetailModal() {
                       className="flex items-center gap-1.5 px-4 py-2 bg-amber-100/80 text-amber-800 rounded-full hover:bg-amber-200 font-semibold text-sm shadow-sm border border-amber-200/50 transition-colors"
                     >
                       Tiểu sử
+                    </Link>
+                    <Link
+                      href={`/dashboard/lineage-trace?personId=${person.id}&source=modal`}
+                      target="_blank"
+                      className="flex items-center gap-1.5 px-4 py-2 bg-amber-100/80 text-amber-800 rounded-full hover:bg-amber-200 font-semibold text-sm shadow-sm border border-amber-200/50 transition-colors"
+                    >
+                      <GitBranch className="size-4" />
+                      <span className="hidden sm:inline">Truy vết</span>
                     </Link>
                     <Link
                       href={`/dashboard/members/${person.id}`}
