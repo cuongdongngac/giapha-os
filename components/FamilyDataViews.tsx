@@ -58,41 +58,19 @@ export default function FamilyDataViews({
       }
     }
 
-    console.log("=== Root Calculation Debug ===");
-    console.log("Input rootId:", rootId);
-    console.log("Input finalRootId:", finalRootId);
-    console.log("Calculated rootId (initial):", calculatedRootId);
-    console.log(
-      "Person exists in map:",
-      calculatedRootId ? pMap.has(calculatedRootId) : "N/A",
-    );
-
     // If no rootId is provided, fallback to the earliest created person
     if (!calculatedRootId || !pMap.has(calculatedRootId)) {
-      console.log("Root ID invalid or not found, calculating fallback...");
       const rootsFallback = persons.filter((p) => !childIds.has(p.id));
-      console.log(
-        "Root candidates (no parents):",
-        rootsFallback.map((p) => `${p.full_name} (${p.id})`),
-      );
       if (rootsFallback.length > 0) {
         calculatedRootId = rootsFallback[0].id;
-        console.log("Selected fallback root:", calculatedRootId);
       } else if (persons.length > 0) {
         calculatedRootId = persons[0].id;
-        console.log("Ultimate fallback to first person:", calculatedRootId);
       }
     }
 
     let calculatedRoots: any[] = [];
     if (calculatedRootId && pMap.has(calculatedRootId)) {
       calculatedRoots = [pMap.get(calculatedRootId)!];
-      console.log(
-        "Final roots array:",
-        calculatedRoots.map((r) => `${r.full_name} (${r.id})`),
-      );
-    } else {
-      console.log("No valid root found!");
     }
 
     return {
@@ -217,30 +195,13 @@ export default function FamilyDataViews({
 
       <div className="flex-1 w-full relative z-10">
         {currentView === "tree" && (
-          <>
-            {(() => {
-              console.log("=== About to render FamilyTree ===");
-              console.log("Props for FamilyTree:", {
-                personsMapSize: personsMap.size,
-                relationshipsCount: relationships.length,
-                rootsCount: roots.length,
-                activeRootId,
-                canEdit,
-              });
-              // Debug alert
-              alert(
-                `Debug: About to render FamilyTree with ${personsMap.size} persons, ${relationships.length} relationships, roots: ${roots.length}, activeRootId: ${activeRootId}`,
-              );
-              return null;
-            })()}
-            <FamilyTreeClean
-              key={`tree-${activeRootId}`}
-              personsMap={personsMap}
-              relationships={relationships}
-              roots={roots}
-              canEdit={canEdit}
-            />
-          </>
+          <FamilyTreeClean
+            key={`tree-${activeRootId}`}
+            personsMap={personsMap}
+            relationships={relationships}
+            roots={roots}
+            canEdit={canEdit}
+          />
         )}
         {currentView === "mindmap" && (
           <MindmapTree

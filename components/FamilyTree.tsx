@@ -49,74 +49,6 @@ export default function FamilyTree({
   const filtersRef = useRef<HTMLDivElement>(null);
   const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
 
-  console.log("=== Dashboard Context ===");
-  console.log("showAvatar:", showAvatar);
-  console.log("maxDepth:", maxDepth);
-
-  // Debug logging
-  console.log(
-    `FamilyTree rendering with ${personsMap.size} persons, ${relationships.length} relationships`,
-  );
-  console.log(`Max depth: ${maxDepth}`);
-  console.log(`Roots: ${roots.map((r) => `${r.name} (${r.id})`).join(", ")}`);
-
-  // Check if the specific person exists
-  const targetPersonId = "e63a60cd-c8c2-4952-8663-7b97a863c47f";
-  const targetPerson = personsMap.get(targetPersonId);
-  console.log("=== Target Person Check ===");
-  console.log("Looking for ID:", targetPersonId);
-  console.log("All person IDs:", Array.from(personsMap.keys()));
-
-  if (targetPerson) {
-    console.log(
-      `Target person found: ${targetPerson.full_name} (${targetPersonId})`,
-    );
-    console.log("Target person details:", {
-      id: targetPerson.id,
-      name: targetPerson.full_name,
-      gender: targetPerson.gender,
-      birth_year: targetPerson.birth_year,
-      death_year: targetPerson.death_year,
-      birth_order: targetPerson.birth_order,
-      is_root: roots.some((r) => r.id === targetPersonId),
-    });
-
-    // Check all relationships for this person
-    const personRels = relationships.filter(
-      (r) => r.person_a === targetPersonId || r.person_b === targetPersonId,
-    );
-    console.log(
-      `Relationships for ${targetPerson.full_name}:`,
-      personRels.map((r) => ({
-        type: r.type,
-        person_a: r.person_a,
-        person_b: r.person_b,
-        person_a_name: personsMap.get(r.person_a)?.full_name,
-        person_b_name: personsMap.get(r.person_b)?.full_name,
-      })),
-    );
-
-    // Check if this person is a root
-    const isRoot = roots.some((r) => r.id === targetPersonId);
-    console.log(`Is ${targetPerson.full_name} a root? ${isRoot}`);
-
-    // Check filter status
-    if (hideMales && targetPerson.gender === "male") {
-      console.log(`${targetPerson.full_name} is being hidden by hideMales filter`);
-    }
-    if (hideFemales && targetPerson.gender === "female") {
-      console.log(`${targetPerson.full_name} is being hidden by hideFemales filter`);
-    }
-
-    // Special check: is this person being filtered out in any other way?
-    console.log("=== Additional Checks ===");
-    console.log("Current root ID:", roots[0]?.id);
-    console.log("Max depth setting:", maxDepth);
-    console.log("Filters active:", { hideSpouses, hideMales, hideFemales });
-  } else {
-    console.log(`Target person NOT found: ${targetPersonId}`);
-  }
-
   const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
 
   const toggleNodeCollapse = (personId: string, e: React.MouseEvent) => {
@@ -207,11 +139,8 @@ export default function FamilyTree({
   const getTreeData = (personId: string) => {
     const person = personsMap.get(personId);
     if (!person) {
-      console.log(`Person not found in tree: ${personId}`);
       return { person: null, spouses: [], children: [] };
     }
-
-    console.log(`Processing tree data for: ${person.full_name} (${personId})`);
 
     const spousesList: SpouseData[] = relationships
       .filter(
@@ -229,21 +158,12 @@ export default function FamilyTree({
       .filter((s) => s.person)
       .filter((s) => {
         if (hideSpouses) {
-          console.log(
-            `Hiding spouse: ${s.person.full_name} due to hideSpouses filter`,
-          );
           return false;
         }
         if (hideMales && s.person.gender === "male") {
-          console.log(
-            `Hiding spouse: ${s.person.full_name} due to hideMales filter`,
-          );
           return false;
         }
         if (hideFemales && s.person.gender === "female") {
-          console.log(
-            `Hiding spouse: ${s.person.full_name} due to hideFemales filter`,
-          );
           return false;
         }
         return true;
@@ -255,10 +175,6 @@ export default function FamilyTree({
         r.person_a === personId,
     );
 
-    console.log(
-      `Found ${childRels.length} child relationships for ${person.full_name}`,
-    );
-
     const childrenList = (
       childRels
         .map((r) => personsMap.get(r.person_b))
@@ -266,11 +182,9 @@ export default function FamilyTree({
     )
       .filter((c) => {
         if (hideMales && c.gender === "male") {
-          console.log(`Hiding child: ${c.full_name} due to hideMales filter`);
           return false;
         }
         if (hideFemales && c.gender === "female") {
-          console.log(`Hiding child: ${c.full_name} due to hideFemales filter`);
           return false;
         }
         return true;
@@ -285,10 +199,6 @@ export default function FamilyTree({
         const bYear = b.birth_year ?? Infinity;
         return aYear - bYear;
       });
-
-    console.log(
-      `Final children count for ${person.full_name}: ${childrenList.length}`,
-    );
 
     // If there is only one spouse, or NO spouse, we can just lump all children together.
     // Standard family trees often combine all children under the main node
@@ -308,18 +218,14 @@ export default function FamilyTree({
     visited: Set<string> = new Set(),
   ): React.ReactNode => {
     if (visited.has(personId)) {
-      console.log(`Circular relationship detected for: ${personId}`);
       return null; // cycle guard
     }
     visited.add(personId);
 
     const data = getTreeData(personId);
     if (!data.person) {
-      console.log(`Skipping render for person: ${personId} - not found`);
       return null;
     }
-
-    console.log(`Rendering tree node: ${data.person.full_name} at level ${level}`);
 
     return (
       <li>
