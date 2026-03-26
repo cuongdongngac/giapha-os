@@ -13,6 +13,7 @@ import {
   Plus,
   Minus,
 } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDashboard } from "./DashboardContext";
 import ExportButton from "./ExportButton";
 import FamilyNodeCard from "./FamilyNodeCard";
@@ -46,10 +47,34 @@ export default function FamilyTree({
   const [hideFemales, setHideFemales] = useState(false);
 
   const { showAvatar, setShowAvatar, maxDepth } = useDashboard();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const filtersRef = useRef<HTMLDivElement>(null);
   const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
 
   const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
+
+  const handleContainerClick = (person: Person, spouses: SpouseData[]) => {
+    let targetId = person.id;
+
+    // Nếu người chính không phải nam, tìm người phối ngẫu là nam
+    if (person.gender !== "male") {
+      const maleSpouse = spouses.find((s) => s.person.gender === "male");
+      if (maleSpouse) {
+        targetId = maleSpouse.person.id;
+      }
+    }
+
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.set("rootId", targetId);
+    const newUrl = `${pathname}?${sp.toString()}`;
+    router.push(newUrl);
+    setTimeout(() => {
+      window.location.href = newUrl;
+    }, 100);
+  };
 
   const toggleNodeCollapse = (personId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -243,7 +268,10 @@ export default function FamilyTree({
       <li>
         <div className="node-container inline-flex flex-col items-center relative">
           {/* Main Person & Spouses Row */}
-          <div className="flex relative z-10 bg-white rounded-2xl shadow-md border border-stone-200/80 transition-opacity">
+          <div
+            onClick={() => handleContainerClick(data.person, data.spouses)}
+            className="flex relative z-10 bg-white rounded-2xl shadow-md border border-stone-200/80 transition-all hover:shadow-xl hover:border-amber-200 cursor-pointer p-0.5"
+          >
             <FamilyNodeCard person={data.person} />
 
             {data.spouses.length > 0 && (

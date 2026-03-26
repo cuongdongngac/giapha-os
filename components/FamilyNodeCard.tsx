@@ -37,7 +37,8 @@ export default function FamilyNodeCard({
   const isDeceased = person.is_deceased;
 
   // Handle click to change root
-  const handleRootChange = () => {
+  const handleRootChange = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Ngăn chặn sự kiện nổi lên container cha
     const sp = new URLSearchParams(searchParams.toString());
     sp.set("rootId", person.id);
     const newUrl = `${pathname}?${sp.toString()}`;
@@ -55,7 +56,13 @@ export default function FamilyNodeCard({
 
   const content = (
     <div
-      onClick={onClickCard || handleRootChange}
+      onClick={(e) => {
+        if (onClickCard) {
+          onClickCard();
+        } else {
+          handleRootChange(e);
+        }
+      }}
       className={`group py-2 px-1 w-20 sm:w-24 md:w-28 flex flex-col items-center justify-start transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative bg-white/70 rounded-2xl cursor-pointer
         ${isDeceased ? "grayscale-[0.4] opacity-80" : ""}
       `}
