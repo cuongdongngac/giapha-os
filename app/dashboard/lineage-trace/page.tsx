@@ -16,6 +16,7 @@ import {
   Sparkles,
   TreePine,
   Crown,
+  Printer,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import MemberDetailModal from "@/components/MemberDetailModal";
@@ -54,6 +55,10 @@ function LineageExportButton({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   const handleExport = async (format: "html" | "png" | "pdf") => {
     if (!selectedPerson) return;
 
@@ -77,6 +82,7 @@ function LineageExportButton({
             const dataUrl = await toPng(lineageRef.current, {
               quality: 0.95,
               pixelRatio: 2,
+              backgroundColor: "#ffffff",
             });
             const link = document.createElement("a");
             link.download = `lineage-${selectedPerson.full_name}.png`;
@@ -91,6 +97,7 @@ function LineageExportButton({
             const dataUrl = await toPng(lineageRef.current, {
               quality: 0.95,
               pixelRatio: 2,
+              backgroundColor: "#ffffff",
             });
             const img = new Image();
             img.src = dataUrl;
@@ -335,67 +342,59 @@ function LineageExportButton({
   };
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="flex items-center gap-2 print:hidden" ref={menuRef}>
       <button
-        onClick={() => setShowMenu(!showMenu)}
-        disabled={isExporting}
-        className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors shadow-lg disabled:opacity-50"
+        onClick={handlePrint}
+        className="flex items-center gap-2 px-4 py-2 bg-white text-stone-700 border border-stone-200 rounded-xl hover:bg-stone-50 transition-all shadow-sm font-medium"
       >
-        <Download className="w-4 h-4" />
-        <span className="text-sm font-medium">Xuất</span>
-        <ChevronDown className="w-4 h-4" />
+        <Printer className="w-4 h-4" />
+        <span>In trang</span>
       </button>
 
-      <AnimatePresence>
-        {showMenu && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-stone-200 z-50 overflow-hidden"
-          >
-            <button
-              onClick={() => handleExport("html")}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-amber-50 transition-colors border-b border-stone-100"
-            >
-              <Globe className="w-4 h-4 text-amber-600" />
-              <span className="text-sm font-medium text-stone-700">
-                Xuất HTML
-              </span>
-            </button>
-            <button
-              onClick={() => handleExport("png")}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-amber-50 transition-colors border-b border-stone-100"
-            >
-              <FileImage className="w-4 h-4 text-amber-600" />
-              <span className="text-sm font-medium text-stone-700">
-                Xuất PNG
-              </span>
-            </button>
-            <button
-              onClick={() => handleExport("pdf")}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-amber-50 transition-colors"
-            >
-              <FileText className="w-4 h-4 text-amber-600" />
-              <span className="text-sm font-medium text-stone-700">
-                Xuất PDF
-              </span>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="relative">
+        <button
+          onClick={() => setShowMenu(!showMenu)}
+          disabled={isExporting}
+          className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-xl hover:bg-amber-700 transition-all shadow-md disabled:opacity-50 font-medium"
+        >
+          <Download className="w-4 h-4" />
+          <span>Xuất file</span>
+          <ChevronDown className={`w-4 h-4 transition-transform ${showMenu ? 'rotate-180' : ''}`} />
+        </button>
 
-      {isExporting && (
-        <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-stone-200 z-50 p-4">
-          <div className="flex items-center gap-3">
-            <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
-            <span className="text-sm font-medium text-stone-700">
-              Đang xuất...
-            </span>
-          </div>
-        </div>
-      )}
+        <AnimatePresence>
+          {showMenu && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-stone-100 z-50 py-1"
+            >
+              <button
+                onClick={() => handleExport("html")}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-amber-50 transition-colors text-stone-600 hover:text-amber-700"
+              >
+                <Globe className="w-4 h-4" />
+                <span className="text-sm font-medium">Xuất HTML</span>
+              </button>
+              <button
+                onClick={() => handleExport("png")}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-amber-50 transition-colors text-stone-600 hover:text-amber-700"
+              >
+                <FileImage className="w-4 h-4" />
+                <span className="text-sm font-medium">Xuất PNG</span>
+              </button>
+              <button
+                onClick={() => handleExport("pdf")}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-amber-50 transition-colors text-stone-600 hover:text-amber-700"
+              >
+                <FileText className="w-4 h-4" />
+                <span className="text-sm font-medium">Xuất PDF</span>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
@@ -788,255 +787,79 @@ function LineageDisplay({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {lineage.map((person, index) => (
         <motion.div
           key={person.id}
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
-          className="flex items-center"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: index * 0.05 }}
+          className="flex items-stretch gap-4"
         >
-          {/* Generation Number */}
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{
-              duration: 0.6,
-              delay: index * 0.1 + 0.2,
-              ease: "easeOut",
-            }}
-            className="flex-shrink-0 w-20 h-20 bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 text-white rounded-3xl flex items-center justify-center font-bold text-2xl border-4 border-amber-600 shadow-2xl relative overflow-hidden"
+          {/* Generation indicator */}
+          <div className="flex flex-col items-center gap-1 w-10 shrink-0">
+            <div className="w-8 h-8 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-700 font-bold text-sm shadow-sm">
+              {index + 1}
+            </div>
+            {index < lineage.length - 1 && (
+              <div className="w-0.5 grow bg-amber-100 rounded-full" />
+            )}
+          </div>
+
+          {/* Card */}
+          <button
+            onClick={() => onPersonClick(person.id)}
+            className="flex-1 text-left bg-white border border-stone-200 rounded-2xl p-4 hover:border-amber-400 hover:shadow-md transition-all group relative overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
-            <span className="relative z-10">{index + 1}</span>
-          </motion.div>
-
-          {/* Arrow down for all except first */}
-          {index > 0 && (
-            <motion.div
-              initial={{ opacity: 0, scaleY: 0 }}
-              animate={{ opacity: 1, scaleY: 1 }}
-              transition={{
-                duration: 0.4,
-                delay: index * 0.1 + 0.3,
-                ease: "easeOut",
-              }}
-              className="flex-shrink-0 w-16 h-16 flex items-center justify-center"
-            >
-              <div className="w-1 h-12 bg-gradient-to-b from-amber-400 to-amber-500 rounded-full"></div>
-              <div className="w-6 h-6 border-l-4 border-l-amber-400 border-t-4 border-t-transparent transform -translate-y-2"></div>
-            </motion.div>
-          )}
-
-          {/* Person Card - Clickable */}
-          <motion.div
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.5,
-              delay: index * 0.1 + 0.1,
-              ease: "easeOut",
-            }}
-            className="flex-1"
-          >
-            <button
-              onClick={() => onPersonClick(person.id)}
-              className="w-full bg-gradient-to-br from-white via-amber-50/30 to-orange-50/20 border-2 border-amber-200/60 rounded-3xl p-8 shadow-xl hover:shadow-2xl hover:border-amber-400 hover:shadow-amber-100/30 transition-all duration-500 text-left group relative overflow-hidden"
-            >
-              {/* Background decoration */}
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-100/10 via-transparent to-orange-100/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-              <div className="flex items-start space-x-6 relative z-10">
-                {/* Avatar */}
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{
-                    duration: 0.6,
-                    delay: index * 0.1 + 0.2,
-                    ease: "easeOut",
-                  }}
-                  className={`flex-shrink-0 w-24 h-24 rounded-3xl flex items-center justify-center text-white font-bold text-3xl shadow-2xl relative overflow-hidden border-4 ${
-                    person.gender === "female"
-                      ? "bg-gradient-to-br from-pink-400 via-pink-500 to-rose-600 border-pink-600"
-                      : "bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-600 border-blue-600"
-                  }`}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
-                  <span className="relative z-10">
-                    {person.full_name.charAt(0)}
-                  </span>
-                </motion.div>
-
-                {/* Person Info */}
-                <div className="flex-1">
-                  <motion.h3
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.6,
-                      delay: index * 0.1 + 0.3,
-                      ease: "easeOut",
-                    }}
-                    className="font-bold text-stone-900 text-4xl mb-6 leading-tight"
-                  >
+            <div className="flex items-center gap-4 relative z-10">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-sm ${
+                person.gender === 'female' ? 'bg-rose-400' : 'bg-sky-400'
+              }`}>
+                {person.full_name.charAt(0)}
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h3 className="font-bold text-stone-900 truncate group-hover:text-amber-700 transition-colors">
                     {person.full_name}
-                  </motion.h3>
-
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.6,
-                      delay: index * 0.1 + 0.4,
-                      ease: "easeOut",
-                    }}
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-lg"
-                  >
-                    {person.birth_year && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{
-                          duration: 0.4,
-                          delay: index * 0.1 + 0.5,
-                          ease: "easeOut",
-                        }}
-                        className="flex items-center space-x-3 p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border-2 border-blue-200 shadow-lg"
-                      >
-                        <div className="w-4 h-4 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full shadow-md"></div>
-                        <span className="text-blue-700 font-semibold">
-                          Sinh năm:
-                        </span>
-                        <span className="text-blue-900 font-bold text-xl">
-                          {person.birth_year}
-                        </span>
-                      </motion.div>
-                    )}
-
-                    {person.generation && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{
-                          duration: 0.4,
-                          delay: index * 0.1 + 0.6,
-                          ease: "easeOut",
-                        }}
-                        className="flex items-center space-x-3 p-4 bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl border-2 border-green-200 shadow-lg"
-                      >
-                        <div className="w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full shadow-md"></div>
-                        <span className="text-green-700 font-semibold">
-                          Thế hệ:
-                        </span>
-                        <span className="text-green-900 font-bold text-xl">
-                          {person.generation}
-                        </span>
-                      </motion.div>
-                    )}
-
-                    {person.branch_id && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{
-                          duration: 0.4,
-                          delay: index * 0.1 + 0.7,
-                          ease: "easeOut",
-                        }}
-                        className="flex items-center space-x-3 p-4 bg-gradient-to-br from-purple-50 to-violet-100 rounded-2xl border-2 border-purple-200 shadow-lg"
-                      >
-                        <div className="w-4 h-4 bg-gradient-to-br from-purple-400 to-violet-600 rounded-full shadow-md"></div>
-                        <span className="text-purple-700 font-semibold">
-                          Chi:
-                        </span>
-                        <span className="text-purple-900 font-bold text-xl">
-                          {getBranchName(person.branch_id)}
-                        </span>
-                      </motion.div>
-                    )}
-
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{
-                        duration: 0.4,
-                        delay: index * 0.1 + 0.8,
-                        ease: "easeOut",
-                      }}
-                      className="flex items-center space-x-3 p-4 bg-gradient-to-br from-gray-50 to-stone-100 rounded-2xl border-2 border-gray-200 shadow-lg"
-                    >
-                      <div
-                        className={`w-4 h-4 rounded-full shadow-md bg-gradient-to-br ${
-                          person.gender === "female"
-                            ? "from-pink-400 to-rose-600"
-                            : "from-blue-400 to-indigo-600"
-                        }`}
-                      ></div>
-                      <span className="text-gray-700 font-semibold">
-                        Giới tính:
-                      </span>
-                      <span className="text-gray-900 font-bold text-xl">
-                        {person.gender === "female" ? "Nữ" : "Nam"}
-                      </span>
-                    </motion.div>
-                  </motion.div>
-
-                  {/* Dynamic Generation Info */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.6,
-                      delay: index * 0.1 + 0.5,
-                      ease: "easeOut",
-                    }}
-                    className="mt-6 p-6 bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl border-2 border-amber-200 shadow-lg"
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <Sparkles className="w-4 h-4 text-amber-600" />
-                      <span className="text-amber-700 font-semibold text-lg">
-                        {getGenerationTitle(index)}
-                      </span>
-                    </div>
-                    <div className="text-amber-900 font-medium text-xl mb-2">
-                      {person.gender === "female" ? "Bà " : "Ông "}
-                      {person.full_name}
-                    </div>
-                    <div className="text-amber-700 text-base">
-                      {getRelationshipTitle(index)}
-                    </div>
-                  </motion.div>
-
-                  {person.other_names && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: 0.6,
-                        delay: index * 0.1 + 0.6,
-                        ease: "easeOut",
-                      }}
-                      className="mt-4 p-4 bg-gradient-to-br from-stone-50 to-stone-100 rounded-xl border-2 border-stone-200 shadow-md"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="w-4 h-4 text-stone-600" />
-                        <span className="text-stone-700 font-semibold text-base">
-                          Tên khác:
-                        </span>
-                      </div>
-                      <div className="text-stone-900 font-medium text-base">
-                        {person.other_names}
-                      </div>
-                    </motion.div>
+                  </h3>
+                  <span className="text-[10px] px-2 py-0.5 bg-stone-100 text-stone-500 rounded-full font-medium">
+                    {getRelationshipTitle(index)}
+                  </span>
+                </div>
+                
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-500">
+                  {person.birth_year && (
+                    <span className="flex items-center gap-1">
+                      <span className="w-1 h-1 rounded-full bg-stone-300" />
+                      Năm sinh: <span className="font-semibold text-stone-700">{person.birth_year}</span>
+                    </span>
+                  )}
+                  {person.generation && (
+                    <span className="flex items-center gap-1">
+                      <span className="w-1 h-1 rounded-full bg-stone-300" />
+                      Đời: <span className="font-semibold text-stone-700">{person.generation}</span>
+                    </span>
+                  )}
+                  {person.branch_id && (
+                    <span className="flex items-center gap-1">
+                      <span className="w-1 h-1 rounded-full bg-stone-300" />
+                      Chi: <span className="font-semibold text-stone-700">{getBranchName(person.branch_id)}</span>
+                    </span>
                   )}
                 </div>
               </div>
-            </button>
-          </motion.div>
+
+              <div className="hidden sm:block text-right shrink-0">
+                <div className="text-[10px] text-amber-600 font-bold uppercase tracking-wider">
+                  {getGenerationTitle(index)}
+                </div>
+                <div className="text-xs text-stone-400 italic">
+                  {person.gender === 'female' ? 'Bà' : 'Ông'}
+                </div>
+              </div>
+            </div>
+          </button>
         </motion.div>
       ))}
     </div>
