@@ -3,7 +3,7 @@
 import { useDashboard } from "./DashboardContext";
 import DashboardMemberList from "./DashboardMemberList";
 import DashboardMembersBranchGenerationList from "./DashboardMembersBranchGenerationList";
-import FamilyTreeClean from "./FamilyTreeClean";
+import FamilyTree from "./FamilyTree";
 import MindmapTree from "./MindmapTree";
 import RootSelector from "./RootSelector";
 import NotablesList from "./NotablesList";
@@ -195,7 +195,7 @@ export default function FamilyDataViews({
 
       <div className="flex-1 w-full relative z-10">
         {currentView === "tree" && (
-          <FamilyTreeClean
+          <FamilyTree
             key={`tree-${activeRootId}`}
             personsMap={personsMap}
             relationships={relationships}

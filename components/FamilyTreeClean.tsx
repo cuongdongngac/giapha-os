@@ -10,8 +10,6 @@ import {
   Image as ImageIcon,
   ZoomIn,
   ZoomOut,
-  Plus,
-  Minus,
 } from "lucide-react";
 import { useDashboard } from "./DashboardContext";
 import ExportButton from "./ExportButton";
@@ -22,7 +20,7 @@ interface SpouseData {
   note?: string | null;
 }
 
-export default function FamilyTree({
+export default function FamilyTreeClean({
   personsMap,
   relationships,
   roots,
@@ -48,21 +46,6 @@ export default function FamilyTree({
   const { showAvatar, setShowAvatar, maxDepth } = useDashboard();
   const filtersRef = useRef<HTMLDivElement>(null);
   const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
-
-  const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
-
-  const toggleNodeCollapse = (personId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCollapsedNodes((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(personId)) {
-        newSet.delete(personId);
-      } else {
-        newSet.add(personId);
-      }
-      return newSet;
-    });
-  };
 
   useEffect(() => {
     setPortalNode(document.getElementById("tree-toolbar-portal"));
@@ -157,15 +140,9 @@ export default function FamilyTree({
       })
       .filter((s) => s.person)
       .filter((s) => {
-        if (hideSpouses) {
-          return false;
-        }
-        if (hideMales && s.person.gender === "male") {
-          return false;
-        }
-        if (hideFemales && s.person.gender === "female") {
-          return false;
-        }
+        if (hideSpouses) return false;
+        if (hideMales && s.person.gender === "male") return false;
+        if (hideFemales && s.person.gender === "female") return false;
         return true;
       });
 
@@ -181,12 +158,8 @@ export default function FamilyTree({
         .filter(Boolean) as Person[]
     )
       .filter((c) => {
-        if (hideMales && c.gender === "male") {
-          return false;
-        }
-        if (hideFemales && c.gender === "female") {
-          return false;
-        }
+        if (hideMales && c.gender === "male") return false;
+        if (hideFemales && c.gender === "female") return false;
         return true;
       })
       .sort((a, b) => {
@@ -217,31 +190,15 @@ export default function FamilyTree({
     level: number = 1,
     visited: Set<string> = new Set(),
   ): React.ReactNode => {
-    if (visited.has(personId)) {
-      return null; // cycle guard
-    }
+    if (visited.has(personId)) return null; // cycle guard
     visited.add(personId);
 
     const data = getTreeData(personId);
-    if (!data.person) {
-      return null;
-    }
-
-    const hasChildren = data.children.length > 0;
-
-    // Logic:
-    // 1. If current level < maxDepth, children are shown by default.
-    // 2. If current level >= maxDepth, children are hidden by default.
-    // 3. User can toggle visibility by clicking +/- which adds/removes ID from collapsedNodes.
-
-    const isDefaultExpanded = level < maxDepth;
-    const isToggled = collapsedNodes.has(personId);
-    const showChildren =
-      hasChildren && (isDefaultExpanded ? !isToggled : isToggled);
+    if (!data.person) return null;
 
     return (
       <li>
-        <div className="node-container inline-flex flex-col items-center relative">
+        <div className="node-container inline-flex flex-col items-center">
           {/* Main Person & Spouses Row */}
           <div className="flex relative z-10 bg-white rounded-2xl shadow-md border border-stone-200/80 transition-opacity">
             <FamilyNodeCard person={data.person} />
@@ -252,6 +209,7 @@ export default function FamilyTree({
                   <div key={spouseData.person.id} className="flex relative">
                     <FamilyNodeCard
                       isRingVisible={idx === 0}
+                      isPlusVisible={idx > 0}
                       person={spouseData.person}
                       role={
                         spouseData.person.gender === "male" ? "Chồng" : "Vợ"
@@ -263,25 +221,10 @@ export default function FamilyTree({
               </>
             )}
           </div>
-
-          {/* Expand/Collapse Button */}
-          {hasChildren && (
-            <button
-              onClick={(e) => toggleNodeCollapse(personId, e)}
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 bg-white border border-stone-300 rounded-full w-5 h-5 flex items-center justify-center text-stone-500 hover:text-stone-800 hover:bg-stone-50 hover:border-stone-400 shadow-[0_1px_3px_rgba(0,0,0,0.1)] z-20 focus:outline-none transition-all cursor-pointer"
-              title={showChildren ? "Thu gọn" : "Mở rộng"}
-            >
-              {showChildren ? (
-                <Minus strokeWidth={3} className="size-3" />
-              ) : (
-                <Plus strokeWidth={3} className="size-3" />
-              )}
-            </button>
-          )}
         </div>
 
-        {/* Render Children (if any) and not collapsed */}
-        {showChildren && (
+        {/* Render Children (if any) and level is within maxDepth */}
+        {data.children.length > 0 && level < maxDepth && (
           <ul>
             {data.children.map((child) => (
               <React.Fragment key={child.id}>
@@ -370,8 +313,7 @@ export default function FamilyTree({
                         onChange={(e) => setShowAvatar(!e.target.checked)}
                         className="rounded text-amber-600 focus:ring-amber-500 cursor-pointer size-4"
                       />
-                      <ImageIcon className="size-4 text-stone-400" /> Ẩn ảnh đại
-                      diện
+                      <ImageIcon className="size-4 text-stone-400" /> Ẩn ảnh đại diện
                     </label>
 
                     <div className="h-px w-full bg-stone-100 my-1 font-bold text-stone-400 uppercase tracking-wider flex items-center gap-2"></div>
@@ -504,31 +446,17 @@ export default function FamilyTree({
           border-left: 2px solid #d6d3d1;
           width: 0; height: 30px;
         }
-      `,
+          `,
           }}
         />
 
-        {/* 
-        Use w-max to prevent wrapping and allow scrolling. 
-        mx-auto centers it if smaller than screen. 
-        p-8 adds padding inside scroll area.
-      */}
-        <div
-          id="export-container"
-          className={`w-max min-w-full mx-auto p-4 css-tree transition-all duration-200 ${isDragging ? "opacity-90" : ""}`}
-          style={{
-            transform: `scale(${scale})`,
-            transformOrigin: "top center",
-          }}
-        >
-          <ul>
-            {roots.map((root) => (
-              <React.Fragment key={root.id}>
-                {renderTreeNode(root.id)}
-              </React.Fragment>
-            ))}
-          </ul>
-        </div>
+        <ul className="css-tree">
+          {roots.map((root) => (
+            <React.Fragment key={root.id}>
+              {renderTreeNode(root.id)}
+            </React.Fragment>
+          ))}
+        </ul>
       </div>
     </div>
   );
