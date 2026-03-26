@@ -564,7 +564,53 @@ function LineagePageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-white to-amber-50">
-      <div className="bg-gradient-to-r from-stone-600 via-amber-600 to-stone-600 shadow-lg">
+      {/* Print-specific Styles */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        @media print {
+          /* Hide everything by default */
+          body * {
+            visibility: hidden;
+          }
+          /* Show only the lineage container and its children */
+          #print-content, #print-content * {
+            visibility: visible;
+          }
+          /* Position the print content at the top-left */
+          #print-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            background: white !important;
+          }
+          /* Hide interactive elements inside print content */
+          .print-exclude {
+            display: none !important;
+          }
+          /* Adjust card styling for print */
+          .lineage-card {
+            break-inside: avoid;
+            border: 1px solid #e5e7eb !important;
+            box-shadow: none !important;
+            margin-bottom: 1rem !important;
+          }
+          /* Ensure colors are printed */
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
+      `,
+        }}
+      />
+
+      <div className="bg-gradient-to-r from-stone-600 via-amber-600 to-stone-600 shadow-lg print:hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -639,6 +685,7 @@ function LineagePageContent() {
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
             className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-amber-200/60 p-10"
             ref={lineageRef}
+            id="print-content"
           >
             <div className="mb-10 text-center">
               <motion.div
@@ -836,7 +883,7 @@ function LineageDisplay({
           {/* Card */}
           <button
             onClick={() => onPersonClick(person.id)}
-            className="flex-1 text-left bg-white border border-stone-200 rounded-2xl p-4 hover:border-amber-400 hover:shadow-md transition-all group relative overflow-hidden"
+            className="flex-1 text-left bg-white border border-stone-200 rounded-2xl p-4 hover:border-amber-400 hover:shadow-md transition-all group relative overflow-hidden lineage-card"
           >
             <div className="flex items-center gap-4 relative z-10">
               <div
