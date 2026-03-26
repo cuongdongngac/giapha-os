@@ -2,6 +2,7 @@
 
 import PersonCard from "@/components/PersonCard";
 import { Person } from "@/types";
+import { normalizeVietnamese } from "@/utils/searchHelpers";
 import { ArrowUpDown, Filter, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -26,11 +27,11 @@ export default function DashboardMemberList({
 
   const filteredPersons = initialPersons.filter((person) => {
     // Search in both full_name and other_names
-    const searchTermLower = searchTerm.toLowerCase();
+    const searchTermLower = normalizeVietnamese(searchTerm);
     const matchesSearch =
-      person.full_name.toLowerCase().includes(searchTermLower) ||
+      normalizeVietnamese(person.full_name).includes(searchTermLower) ||
       (person.other_names &&
-        person.other_names.toLowerCase().includes(searchTermLower));
+        normalizeVietnamese(person.other_names).includes(searchTermLower));
 
     let matchesFilter = true;
     switch (filterOption) {

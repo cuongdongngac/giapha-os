@@ -51,34 +51,55 @@ export function useFamilyData(options: UseFamilyDataOptions = {}): UseFamilyData
       const startTime = performance.now();
       
       const supabase = createClient();
+
+      // Recursive fetch function to ensure we get ALL records regardless of server limits
+      async function fetchEverything(table: string) {
+        let allData: any[] = [];
+        let from = 0;
+        let to = 999;
+        const step = 1000;
+        
+        console.log(`Starting fetch for ${table}...`);
+        
+        while (true) {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .range(from, to);
+            
+          if (error) {
+            console.error(`Error fetching ${table} at range ${from}-${to}:`, error);
+            throw error;
+          }
+          
+          if (!data || data.length === 0) break;
+          
+          allData = [...allData, ...data];
+          console.log(`Fetched ${data.length} records from ${table}. Total: ${allData.length}`);
+          
+          if (data.length < step) break; // Last page
+          
+          from += step;
+          to += step;
+        }
+        return allData;
+      }
       
-      // Load persons
-      const { data: allPersons, error: personsError } = await supabase
-        .from("persons")
-        .select("id, full_name, gender, birth_year, birth_month, birth_day, death_year, death_month, death_day, avatar_url, note, created_at, updated_at, is_deceased, is_in_law, is_notable, birth_order, generation, branch_id, other_names")
-        .order("birth_year", { ascending: true, nullsFirst: false });
-
-      if (personsError) throw new Error(personsError.message);
-
-      // Load relationships
-      const { data: relsData, error: relationshipsError } = await supabase
-        .from("relationships")
-        .select("id, type, person_a, person_b, note, created_at, updated_at");
-
-      if (relationshipsError) throw new Error(relationshipsError.message);
+      const allPersons = await fetchEverything("persons");
+      const relsData = await fetchEverything("relationships");
 
       const endTime = performance.now();
-      console.log(`Family data loaded in ${endTime - startTime}ms`);
+      console.log(`Success! Loaded ${allPersons.length} persons and ${relsData.length} relationships in ${Math.round(endTime - startTime)}ms`);
 
       // Update cache
       familyDataCache = {
-        persons: allPersons || [],
-        relationships: relsData || [],
+        persons: allPersons,
+        relationships: relsData,
         timestamp: Date.now()
       };
 
-      setPersons(allPersons || []);
-      setRelationships(relsData || []);
+      setPersons(allPersons);
+      setRelationships(relsData);
     } catch (err: any) {
       console.error('Error loading family data:', err);
       setError(err.message);

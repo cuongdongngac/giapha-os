@@ -3,6 +3,7 @@
 import PersonCard from "@/components/PersonCard";
 import { createClient } from "@/utils/supabase/client";
 import { Person } from "@/types";
+import { normalizeVietnamese } from "@/utils/searchHelpers";
 import { ArrowUpDown, Filter, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -132,12 +133,12 @@ export default function DashboardMembersBranchGenerationList({
   }, [branchId, branches.length, childrenByParent]);
 
   const filtered = useMemo(() => {
-    const q = searchTerm.trim().toLowerCase();
+    const q = normalizeVietnamese(searchTerm.trim());
     return persons.filter((p) => {
       const matchesSearch =
         !q ||
-        p.full_name.toLowerCase().includes(q) ||
-        (p.other_names ?? "").toLowerCase().includes(q);
+        normalizeVietnamese(p.full_name).includes(q) ||
+        normalizeVietnamese(p.other_names ?? "").includes(q);
 
       const matchesGeneration =
         generation === "" ? true : p.generation === generation;

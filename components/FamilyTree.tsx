@@ -5,7 +5,14 @@ import { createPortal } from "react-dom";
 
 import { Person, Relationship } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { Filter, Image as ImageIcon, ZoomIn, ZoomOut, Plus, Minus } from "lucide-react";
+import {
+  Filter,
+  Image as ImageIcon,
+  ZoomIn,
+  ZoomOut,
+  Plus,
+  Minus,
+} from "lucide-react";
 import { useDashboard } from "./DashboardContext";
 import ExportButton from "./ExportButton";
 import FamilyNodeCard from "./FamilyNodeCard";
@@ -41,6 +48,75 @@ export default function FamilyTree({
   const { showAvatar, setShowAvatar, maxDepth } = useDashboard();
   const filtersRef = useRef<HTMLDivElement>(null);
   const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
+
+  console.log("=== Dashboard Context ===");
+  console.log("showAvatar:", showAvatar);
+  console.log("maxDepth:", maxDepth);
+
+  // Debug logging
+  console.log(
+    `FamilyTree rendering with ${personsMap.size} persons, ${relationships.length} relationships`,
+  );
+  console.log(`Max depth: ${maxDepth}`);
+  console.log(`Roots: ${roots.map((r) => `${r.name} (${r.id})`).join(", ")}`);
+
+  // Check if the specific person exists
+  const targetPersonId = "e63a60cd-c8c2-4952-8663-7b97a863c47f";
+  const targetPerson = personsMap.get(targetPersonId);
+  console.log("=== Target Person Check ===");
+  console.log("Looking for ID:", targetPersonId);
+  console.log("All person IDs:", Array.from(personsMap.keys()));
+
+  if (targetPerson) {
+    console.log(
+      `Target person found: ${targetPerson.full_name} (${targetPersonId})`,
+    );
+    console.log("Target person details:", {
+      id: targetPerson.id,
+      name: targetPerson.full_name,
+      gender: targetPerson.gender,
+      birth_year: targetPerson.birth_year,
+      death_year: targetPerson.death_year,
+      birth_order: targetPerson.birth_order,
+      is_root: roots.some((r) => r.id === targetPersonId),
+    });
+
+    // Check all relationships for this person
+    const personRels = relationships.filter(
+      (r) => r.person_a === targetPersonId || r.person_b === targetPersonId,
+    );
+    console.log(
+      `Relationships for ${targetPerson.full_name}:`,
+      personRels.map((r) => ({
+        type: r.type,
+        person_a: r.person_a,
+        person_b: r.person_b,
+        person_a_name: personsMap.get(r.person_a)?.full_name,
+        person_b_name: personsMap.get(r.person_b)?.full_name,
+      })),
+    );
+
+    // Check if this person is a root
+    const isRoot = roots.some((r) => r.id === targetPersonId);
+    console.log(`Is ${targetPerson.full_name} a root? ${isRoot}`);
+
+    // Check filter status
+    if (hideMales && targetPerson.gender === "male") {
+      console.log(`${targetPerson.full_name} is being hidden by hideMales filter`);
+    }
+    if (hideFemales && targetPerson.gender === "female") {
+      console.log(`${targetPerson.full_name} is being hidden by hideFemales filter`);
+    }
+
+    // Special check: is this person being filtered out in any other way?
+    console.log("=== Additional Checks ===");
+    console.log("Current root ID:", roots[0]?.id);
+    console.log("Max depth setting:", maxDepth);
+    console.log("Filters active:", { hideSpouses, hideMales, hideFemales });
+  } else {
+    console.log(`Target person NOT found: ${targetPersonId}`);
+  }
+
   const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
 
   const toggleNodeCollapse = (personId: string, e: React.MouseEvent) => {
@@ -129,6 +205,14 @@ export default function FamilyTree({
 
   // Helper function to resolve tree connections for a person
   const getTreeData = (personId: string) => {
+    const person = personsMap.get(personId);
+    if (!person) {
+      console.log(`Person not found in tree: ${personId}`);
+      return { person: null, spouses: [], children: [] };
+    }
+
+    console.log(`Processing tree data for: ${person.full_name} (${personId})`);
+
     const spousesList: SpouseData[] = relationships
       .filter(
         (r) =>
@@ -144,9 +228,24 @@ export default function FamilyTree({
       })
       .filter((s) => s.person)
       .filter((s) => {
-        if (hideSpouses) return false;
-        if (hideMales && s.person.gender === "male") return false;
-        if (hideFemales && s.person.gender === "female") return false;
+        if (hideSpouses) {
+          console.log(
+            `Hiding spouse: ${s.person.full_name} due to hideSpouses filter`,
+          );
+          return false;
+        }
+        if (hideMales && s.person.gender === "male") {
+          console.log(
+            `Hiding spouse: ${s.person.full_name} due to hideMales filter`,
+          );
+          return false;
+        }
+        if (hideFemales && s.person.gender === "female") {
+          console.log(
+            `Hiding spouse: ${s.person.full_name} due to hideFemales filter`,
+          );
+          return false;
+        }
         return true;
       });
 
@@ -156,14 +255,24 @@ export default function FamilyTree({
         r.person_a === personId,
     );
 
+    console.log(
+      `Found ${childRels.length} child relationships for ${person.full_name}`,
+    );
+
     const childrenList = (
       childRels
         .map((r) => personsMap.get(r.person_b))
         .filter(Boolean) as Person[]
     )
       .filter((c) => {
-        if (hideMales && c.gender === "male") return false;
-        if (hideFemales && c.gender === "female") return false;
+        if (hideMales && c.gender === "male") {
+          console.log(`Hiding child: ${c.full_name} due to hideMales filter`);
+          return false;
+        }
+        if (hideFemales && c.gender === "female") {
+          console.log(`Hiding child: ${c.full_name} due to hideFemales filter`);
+          return false;
+        }
         return true;
       })
       .sort((a, b) => {
@@ -176,6 +285,10 @@ export default function FamilyTree({
         const bYear = b.birth_year ?? Infinity;
         return aYear - bYear;
       });
+
+    console.log(
+      `Final children count for ${person.full_name}: ${childrenList.length}`,
+    );
 
     // If there is only one spouse, or NO spouse, we can just lump all children together.
     // Standard family trees often combine all children under the main node
@@ -194,18 +307,23 @@ export default function FamilyTree({
     level: number = 1,
     visited: Set<string> = new Set(),
   ): React.ReactNode => {
-    if (visited.has(personId)) return null; // cycle guard
+    if (visited.has(personId)) {
+      console.log(`Circular relationship detected for: ${personId}`);
+      return null; // cycle guard
+    }
     visited.add(personId);
 
     const data = getTreeData(personId);
-    if (!data.person) return null;
+    if (!data.person) {
+      console.log(`Skipping render for person: ${personId} - not found`);
+      return null;
+    }
 
-    const isCollapsed = collapsedNodes.has(personId);
-    const hasChildren = data.children.length > 0 && level < maxDepth;
+    console.log(`Rendering tree node: ${data.person.full_name} at level ${level}`);
 
     return (
-      <li className="relative">
-        <div className="node-container inline-flex flex-col items-center relative">
+      <li>
+        <div className="node-container inline-flex flex-col items-center">
           {/* Main Person & Spouses Row */}
           <div className="flex relative z-10 bg-white rounded-2xl shadow-md border border-stone-200/80 transition-opacity">
             <FamilyNodeCard person={data.person} />
@@ -235,7 +353,11 @@ export default function FamilyTree({
               className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 bg-white border border-stone-300 rounded-full w-5 h-5 flex items-center justify-center text-stone-500 hover:text-stone-800 hover:bg-stone-50 hover:border-stone-400 shadow-[0_1px_3px_rgba(0,0,0,0.1)] z-20 focus:outline-none transition-all cursor-pointer"
               title={isCollapsed ? "Mở rộng" : "Thu gọn"}
             >
-              {isCollapsed ? <Plus strokeWidth={3} className="size-3" /> : <Minus strokeWidth={3} className="size-3" />}
+              {isCollapsed ? (
+                <Plus strokeWidth={3} className="size-3" />
+              ) : (
+                <Minus strokeWidth={3} className="size-3" />
+              )}
             </button>
           )}
         </div>

@@ -50,10 +50,13 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
   if (view === "posts") {
     console.log("Loading posts server-side for posts view");
     const status = canEdit ? "all" : "published";
-    
+
     let query = supabase
       .from("posts")
-      .select("id, title, slug, excerpt, featured_image, author_id, status, published_at, created_at, updated_at", { count: "estimated" });
+      .select(
+        "id, title, slug, excerpt, featured_image, author_id, status, published_at, created_at, updated_at",
+        { count: "estimated" },
+      );
 
     if (status !== "all") {
       query = query
@@ -76,40 +79,50 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
     const page = 1; // Get from search params later
 
     let personsData: any[] = [];
-    let relationships: any[] = [];
     let relsData: any[] = [];
 
-    // Helper to fetch all records bypassing the 1000 limit
-    async function fetchAll(table: string, columns: string, orderColumn?: string) {
+    // Recursive fetch function to ensure we get ALL records regardless of server limits
+    async function fetchEverything(table: string) {
       let allData: any[] = [];
-      let page = 0;
-      const pageSize = 1000;
+      let from = 0;
+      let to = 999;
+      const step = 1000;
+
+      console.log(`Starting fetch for ${table}...`);
+
       while (true) {
-        let query = supabase.from(table).select(columns).range(page * pageSize, (page + 1) * pageSize - 1);
-        if (orderColumn) {
-          query = query.order(orderColumn, { ascending: true, nullsFirst: false });
-        }
-        const { data, error } = await query;
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .range(from, to);
+
         if (error) {
-          console.error(`Error fetching ${table}:`, error);
+          console.error(
+            `Error fetching ${table} at range ${from}-${to}:`,
+            error,
+          );
           break;
         }
-        if (data && data.length > 0) {
-          allData = [...allData, ...data];
-          if (data.length < pageSize) break;
-        } else {
-          break;
-        }
-        page++;
+
+        if (!data || data.length === 0) break;
+
+        allData = [...allData, ...data];
+        console.log(
+          `Fetched ${data.length} records from ${table}. Total: ${allData.length}`,
+        );
+
+        if (data.length < step) break; // Last page
+
+        from += step;
+        to += step;
       }
       return allData;
     }
 
-    personsData = await fetchAll("persons", "id, full_name, gender, birth_year, birth_month, birth_day, death_year, death_month, death_day, avatar_url, note, created_at, updated_at, is_deceased, is_in_law, is_notable, birth_order, generation, branch_id, other_names", "birth_year");
-    relsData = await fetchAll("relationships", "id, type, person_a, person_b, note, created_at, updated_at");
+    personsData = await fetchEverything("persons");
+    relsData = await fetchEverything("relationships");
 
-    relationships = relsData || [];
-
+    relationships = relsData;
     persons = personsData as Person[];
 
     // Prepare map and roots for tree views
@@ -156,4 +169,3 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
     </DashboardProvider>
   );
 }
-

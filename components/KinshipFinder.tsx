@@ -11,6 +11,7 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
+import { normalizeVietnamese } from "@/utils/searchHelpers";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import DefaultAvatar from "./DefaultAvatar";
@@ -69,14 +70,16 @@ function PersonSelector({
   const [open, setOpen] = useState(false);
 
   const filtered = useMemo(
-    () =>
-      persons
+    () => {
+      const q = normalizeVietnamese(search);
+      return persons
         .filter(
           (p) =>
             p.id !== disabledId &&
-            p.full_name.toLowerCase().includes(search.toLowerCase()),
+            normalizeVietnamese(p.full_name).includes(q),
         )
-        .slice(0, 20),
+        .slice(0, 50); // Increase to 50
+    },
     [persons, disabledId, search],
   );
 

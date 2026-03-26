@@ -3,6 +3,7 @@
 import { Person } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronDown, Database, Search } from "lucide-react";
+import { normalizeVietnamese } from "@/utils/searchHelpers";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import DefaultAvatar from "./DefaultAvatar";
@@ -49,12 +50,13 @@ export default function PersonSelector({
   const filteredPersons = persons
     .filter((p) => {
       // Search in both full_name and other_names
-      const searchTermLower = searchTerm.toLowerCase();
-      const searchStr =
-        `${p.full_name} ${p.other_names || ""} ${p.birth_year || ""}`.toLowerCase();
+      const searchTermLower = normalizeVietnamese(searchTerm);
+      const searchStr = normalizeVietnamese(
+        `${p.full_name} ${p.other_names || ""} ${p.birth_year || ""}`,
+      );
       return searchStr.includes(searchTermLower);
     })
-    .slice(0, 20);
+    .slice(0, 50);
 
   const handleSelect = (personId: string | null) => {
     onSelect(personId);
