@@ -15,7 +15,7 @@ export default function DashboardHeader({
   children,
 }: DashboardHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 bg-white/80 border-b border-stone-200 shadow-sm transition-all duration-200">
+    <header className="sticky top-0 z-30 bg-white/80 border-b border-stone-200 shadow-sm transition-all duration-200 print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Link href="/dashboard" className="group block">
           <img
