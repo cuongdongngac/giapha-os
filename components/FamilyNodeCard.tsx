@@ -15,6 +15,7 @@ interface FamilyNodeCardProps {
   isExpandable?: boolean;
   isExpanded?: boolean;
   isRingVisible?: boolean;
+  isPlusVisible?: boolean;
 }
 
 export default function FamilyNodeCard({
@@ -26,6 +27,7 @@ export default function FamilyNodeCard({
   isExpandable = false,
   isExpanded = false,
   isRingVisible = false,
+  isPlusVisible = false,
 }: FamilyNodeCardProps) {
   const { showAvatar, setMemberModalId } = useDashboard();
   const router = useRouter();
@@ -64,10 +66,16 @@ export default function FamilyNodeCard({
         </div>
       )}
 
+      {isPlusVisible && (
+        <div className="absolute top-[15%] -left-2.5 sm:-left-4 size-5 sm:size-6 rounded-full shadow-sm bg-white z-100 flex items-center justify-center text-[10px] sm:text-sm font-bold text-amber-600">
+          <span className="leading-none">+</span>
+        </div>
+      )}
+
       {/* Avatar and Name Section - Main Click Area */}
       <div className="flex flex-col items-center gap-1">
         {showAvatar && (
-          <div 
+          <div
             className="relative shrink-0 cursor-pointer"
             onClick={(e) => {
               if (!onClickCard && !onClickName) {
@@ -127,8 +135,6 @@ export default function FamilyNodeCard({
             {note}
           </p>
         )}
-
-
       </div>
     </div>
   );
