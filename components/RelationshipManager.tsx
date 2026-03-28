@@ -72,9 +72,18 @@ export default function RelationshipManager({
       name: string;
       gender: "male" | "female" | "other";
       birthYear: string;
+      birthOrder: string;
       isProcessing: boolean;
     }[]
-  >([{ name: "", gender: "male", birthYear: "", isProcessing: false }]);
+  >([
+    {
+      name: "",
+      gender: "male",
+      birthYear: "",
+      birthOrder: "",
+      isProcessing: false,
+    },
+  ]);
 
   // Quick Add Spouse State
   const [isAddingSpouse, setIsAddingSpouse] = useState(false);
@@ -348,6 +357,7 @@ export default function RelationshipManager({
           full_name: string;
           gender: "male" | "female" | "other";
           birth_year?: number;
+          birth_order?: number;
           generation?: number;
           branch_id?: number;
         } = {
@@ -361,6 +371,10 @@ export default function RelationshipManager({
         if (child.birthYear.trim() !== "") {
           const year = parseInt(child.birthYear);
           if (!isNaN(year)) personPayload.birth_year = year;
+        }
+        if (child.birthOrder.trim() !== "") {
+          const order = parseInt(child.birthOrder);
+          if (!isNaN(order)) personPayload.birth_order = order;
         }
 
         const { data: newPersonData, error: insertError } = await supabase
@@ -398,7 +412,13 @@ export default function RelationshipManager({
       if (successCount === validChildren.length) {
         setIsAddingBulk(false);
         setBulkChildren([
-          { name: "", gender: "male", birthYear: "", isProcessing: false },
+          {
+            name: "",
+            gender: "male",
+            birthYear: "",
+            birthOrder: "",
+            isProcessing: false,
+          },
         ]);
         setSelectedSpouseId("");
         fetchRelationships();
@@ -442,10 +462,12 @@ export default function RelationshipManager({
         gender: "male" | "female" | "other";
         birth_year?: number;
         generation?: number;
+        is_in_law: boolean;
       } = {
         full_name: newSpouseName.trim(),
         gender: newSpouseGender,
         generation: currentPersonGeneration || undefined,
+        is_in_law: true,
       };
 
       if (newSpouseBirthYear.trim() !== "") {
@@ -883,8 +905,11 @@ export default function RelationshipManager({
                 Danh sách các con
               </label>
               {bulkChildren.map((child, index) => (
-                <div key={index} className="flex gap-2 items-center">
-                  <span className="text-stone-400 text-xs w-4">
+                <div
+                  key={index}
+                  className="flex flex-wrap sm:flex-nowrap gap-2 items-center pb-2 sm:pb-0 border-b border-stone-100 sm:border-none"
+                >
+                  <span className="text-stone-400 text-xs w-4 hidden sm:block">
                     {index + 1}.
                   </span>
                   <input
@@ -896,7 +921,7 @@ export default function RelationshipManager({
                       newBulk[index].name = e.target.value;
                       setBulkChildren(newBulk);
                     }}
-                    className="flex-2 bg-white text-stone-900 placeholder-stone-400 text-sm rounded-md border-stone-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-2 border"
+                    className="flex-[3] min-w-[120px] bg-white text-stone-900 placeholder-stone-400 text-sm rounded-md border-stone-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-2 border"
                   />
                   <select
                     value={child.gender}
@@ -908,7 +933,7 @@ export default function RelationshipManager({
                         | "other";
                       setBulkChildren(newBulk);
                     }}
-                    className="flex-1 bg-white text-stone-900 text-sm rounded-md border-stone-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-2 border"
+                    className="flex-1 min-w-[70px] bg-white text-stone-900 text-sm rounded-md border-stone-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-2 border"
                   >
                     <option value="male">Nam</option>
                     <option value="female">Nữ</option>
@@ -923,7 +948,19 @@ export default function RelationshipManager({
                       newBulk[index].birthYear = e.target.value;
                       setBulkChildren(newBulk);
                     }}
-                    className="flex-1 bg-white text-stone-900 placeholder-stone-400 text-sm rounded-md border-stone-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-2 border w-24"
+                    className="flex-1 min-w-[80px] bg-white text-stone-900 placeholder-stone-400 text-sm rounded-md border-stone-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-2 border"
+                  />
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Thứ"
+                    value={child.birthOrder}
+                    onChange={(e) => {
+                      const newBulk = [...bulkChildren];
+                      newBulk[index].birthOrder = e.target.value;
+                      setBulkChildren(newBulk);
+                    }}
+                    className="flex-1 min-w-[60px] bg-white text-stone-900 placeholder-stone-400 text-sm rounded-md border-stone-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-2 border"
                   />
                   <button
                     onClick={() => {
@@ -936,12 +973,13 @@ export default function RelationshipManager({
                           name: "",
                           gender: "male",
                           birthYear: "",
+                          birthOrder: "",
                           isProcessing: false,
                         });
                       }
                       setBulkChildren(newBulk);
                     }}
-                    className="text-stone-400 hover:text-red-500 p-2"
+                    className="text-stone-400 hover:text-red-500 p-2 ml-auto"
                   >
                     ✕
                   </button>
@@ -956,6 +994,7 @@ export default function RelationshipManager({
                       name: "",
                       gender: "male",
                       birthYear: "",
+                      birthOrder: "",
                       isProcessing: false,
                     },
                   ]);
@@ -984,6 +1023,7 @@ export default function RelationshipManager({
                       name: "",
                       gender: "male",
                       birthYear: "",
+                      birthOrder: "",
                       isProcessing: false,
                     },
                   ]);
