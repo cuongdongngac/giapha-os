@@ -18,16 +18,14 @@ export default async function MemberDetailPage({ params }: PageProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  // Check role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  // Check role if logged in
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single()
+    : { data: null };
 
   const isAdmin = profile?.role === "admin";
   const canEdit = profile?.role === "admin" || profile?.role === "editor";

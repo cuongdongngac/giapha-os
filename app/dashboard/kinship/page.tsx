@@ -15,8 +15,6 @@ export default async function KinshipPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
-
   // Helper to fetch all records bypassing the 1000 limit
   async function fetchAll(table: string, columns: string, orderColumn?: string) {
     let allData: any[] = [];

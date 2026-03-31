@@ -67,7 +67,7 @@ export default function LandingHero({ siteName }: LandingHeroProps) {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-16 bg-amber-500/30 blur-2xl rounded-full z-0 hidden sm:block"></div>
 
           <Link
-            href="/public"
+            href="/dashboard?view=list"
             className="group inline-flex items-center justify-center gap-2 px-10 py-5 text-lg font-bold text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 hover:border-amber-300 rounded-2xl shadow-xl shadow-amber-200/10 hover:shadow-2xl hover:shadow-amber-300/20 transition-all duration-300 hover:-translate-y-1 active:translate-y-0 w-full sm:w-auto overflow-hidden relative"
           >
             <span className="relative z-10 flex items-center gap-3">

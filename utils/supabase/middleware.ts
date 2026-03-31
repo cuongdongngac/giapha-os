@@ -47,11 +47,24 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes
-  const protectedPaths = ["/dashboard"];
-  const isProtectedPath = protectedPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path),
-  );
+  // Protected routes - only allow certain paths if user is logged in
+  // We allow /dashboard for public viewing now
+  const protectedPaths = [
+    "/dashboard/users",
+    "/dashboard/simple-logs",
+    "/dashboard/data",
+    "/dashboard/members/new",
+    "/dashboard/members/[id]/edit",
+    "/dashboard/lineage",
+  ];
+  const isProtectedPath = protectedPaths.some((path) => {
+    if (path.includes("[id]")) {
+      // Handle dynamic route for edit
+      const regex = new RegExp(path.replace("[id]", "[^/]+") + "$");
+      return regex.test(request.nextUrl.pathname);
+    }
+    return request.nextUrl.pathname.startsWith(path);
+  });
 
   const isLoginPage = request.nextUrl.pathname.startsWith("/login");
 

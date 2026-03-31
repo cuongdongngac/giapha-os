@@ -17,8 +17,6 @@ export default async function EventsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
-
   const { data: persons } = await supabase
     .from("persons")
     .select(

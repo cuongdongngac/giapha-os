@@ -21,19 +21,17 @@ export default async function DashboardLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_active, role")
-    .eq("id", user.id)
-    .single();
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("is_active, role")
+        .eq("id", user.id)
+        .single()
+    : { data: null };
 
   const isAdmin = profile?.role === "admin";
 
-  if (!profile?.is_active) {
+  if (user && !profile?.is_active) {
     return (
       <div className="min-h-screen bg-stone-50 text-stone-900 flex flex-col font-sans">
         <header className="sticky top-0 z-30 bg-white/80 border-b border-stone-200 shadow-sm transition-all duration-200">
@@ -89,7 +87,7 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900 flex flex-col font-sans">
       <ModalProvider>
-        <DashboardHeader isAdmin={isAdmin} userEmail={user.email} />
+        <DashboardHeader isAdmin={isAdmin} userEmail={user?.email} />
         {children}
         <Footer
           className="mt-auto bg-white border-t border-stone-200"

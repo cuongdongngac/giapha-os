@@ -72,7 +72,7 @@ export default function HeaderMenu({ isAdmin, userEmail }: HeaderMenuProps) {
                 Tài khoản
               </p>
               <p className="text-sm font-medium text-stone-900 truncate">
-                {userEmail}
+                {userEmail || "Khách"}
               </p>
             </div>
 
@@ -137,18 +137,20 @@ export default function HeaderMenu({ isAdmin, userEmail }: HeaderMenuProps) {
                 <BarChart2 className="size-4" />
                 Thống kê gia phả
               </Link>
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  // Open change password modal
-                  const event = new CustomEvent("openChangePasswordModal");
-                  window.dispatchEvent(event);
-                }}
-                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-amber-700 hover:bg-amber-50 transition-colors w-full text-left"
-              >
-                <KeyRound className="size-4" />
-                Đổi mật khẩu
-              </button>
+              {userEmail && (
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    // Open change password modal
+                    const event = new CustomEvent("openChangePasswordModal");
+                    window.dispatchEvent(event);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-amber-700 hover:bg-amber-50 transition-colors w-full text-left"
+                >
+                  <KeyRound className="size-4" />
+                  Đổi mật khẩu
+                </button>
+              )}
               <Link
                 href="/dashboard/lineage-search"
                 onClick={() => setIsOpen(false)}
@@ -173,7 +175,18 @@ export default function HeaderMenu({ isAdmin, userEmail }: HeaderMenuProps) {
                 <Info className="size-4" />
                 Giới thiệu & Liên hệ
               </Link>
-              <LogoutButton />
+              {userEmail ? (
+                <LogoutButton />
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-50 transition-colors"
+                >
+                  <KeyRound className="size-4" />
+                  Đăng nhập Quản trị
+                </Link>
+              )}
             </div>
           </motion.div>
         )}
