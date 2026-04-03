@@ -4,6 +4,7 @@ import { Post, deletePost } from "@/app/actions/posts";
 import { motion } from "framer-motion";
 import { Calendar, User, ArrowRight, Edit3, Trash2, Loader2 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -59,10 +60,12 @@ export default function PostCard({ post, index, isAdmin, layout = "list", onSele
       >
         <div className={`w-full h-full ${isList ? 'sm:absolute sm:inset-0' : ''}`}>
         {post.featured_image ? (
-          <img
+          <Image
             src={post.featured_image}
             alt={post.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
           <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-300">

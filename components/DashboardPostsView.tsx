@@ -6,6 +6,7 @@ import { Post, deletePost } from "@/app/actions/posts";
 import PostCard from "./PostCard";
 import PostForm from "./PostForm";
 import PDFViewer from "./PDFViewer";
+import Image from "next/image";
 import { usePosts } from "@/hooks/usePosts";
 import {
   FileText,
@@ -189,12 +190,14 @@ export default function DashboardPostsView({
                   }}
                   className="group cursor-pointer space-y-3"
                 >
-                  <div className="aspect-video rounded-xl overflow-hidden border border-stone-200 bg-stone-100">
+                  <div className="relative aspect-video rounded-xl overflow-hidden border border-stone-200 bg-stone-100">
                     {otherPost.featured_image ? (
-                      <img
+                      <Image
                         src={otherPost.featured_image}
                         alt={otherPost.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        className="object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-stone-300">
