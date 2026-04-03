@@ -1,6 +1,6 @@
 "use server";
 
-import { Relationship } from "@/types";
+import { Relationship, RelationshipType } from "@/types";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
@@ -36,11 +36,28 @@ interface PersonExport {
 
 interface RelationshipExport {
   id?: string;
-  type: string;
+  type: RelationshipType;
   person_a: string;
   person_b: string;
+  note?: string | null;
   created_at?: string;
   updated_at?: string;
+}
+
+interface PersonDetailsPrivateExport {
+  person_id: string;
+  phone_number: string | null;
+  occupation: string | null;
+  current_residence: string | null;
+}
+
+interface CustomEventExport {
+  id: string;
+  name: string;
+  content: string | null;
+  event_date: string;
+  location: string | null;
+  created_by: string | null;
 }
 
 interface BackupPayload {
@@ -48,6 +65,8 @@ interface BackupPayload {
   timestamp: string;
   persons: PersonExport[];
   relationships: RelationshipExport[];
+  person_details_private?: PersonDetailsPrivateExport[];
+  custom_events?: CustomEventExport[];
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -104,6 +123,19 @@ function sanitizeRelationship(
     type: r.type,
     person_a: r.person_a,
     person_b: r.person_b,
+    note: r.note ?? null,
+  };
+}
+
+function sanitizeCustomEvent(
+  e: CustomEventExport,
+): Omit<CustomEventExport, "created_by"> {
+  return {
+    id: e.id,
+    name: e.name,
+    content: e.content ?? null,
+    event_date: e.event_date,
+    location: e.location ?? null,
   };
 }
 
@@ -140,8 +172,10 @@ export async function exportData(
     return allData;
   }
 
-  let exportPersons: PersonExport[] = [];
-  let exportRels: RelationshipExport[] = [];
+  let allPersons: PersonExport[] = [];
+  let allRels: RelationshipExport[] = [];
+  let allPrivateDetails: PersonDetailsPrivateExport[] = [];
+  let allCustomEvents: CustomEventExport[] = [];
 
   try {
     const personsData = await fetchAll(
@@ -149,17 +183,37 @@ export async function exportData(
       "id, full_name, gender, birth_year, birth_month, birth_day, death_year, death_month, death_day, is_deceased, is_in_law, birth_order, generation, other_names, avatar_url, note, created_at, updated_at", 
       "created_at"
     );
-    exportPersons = personsData as PersonExport[];
+    allPersons = personsData as PersonExport[];
 
     const relsData = await fetchAll(
       "relationships", 
-      "id, type, person_a, person_b, created_at, updated_at", 
+      "id, type, person_a, person_b, note, created_at, updated_at", 
       "created_at"
     );
-    exportRels = relsData as RelationshipExport[];
+    allRels = relsData as RelationshipExport[];
+
+    const privateData = await fetchAll(
+      "person_details_private",
+      "person_id, phone_number, occupation, current_residence",
+      "person_id"
+    );
+    allPrivateDetails = privateData as PersonDetailsPrivateExport[];
+
+    const eventsData = await fetchAll(
+      "custom_events",
+      "id, name, content, event_date, location, created_by",
+      "event_date"
+    );
+    allCustomEvents = eventsData as CustomEventExport[];
+
   } catch (error: any) {
     return { error: "Lỗi tải dữ liệu: " + error.message };
   }
+
+  let exportPersons = allPersons;
+  let exportRels = allRels;
+  let exportPrivateDetails = allPrivateDetails;
+  const exportCustomEvents = allCustomEvents;
 
   // If a root person is selected, filter the export to only their subtree
   if (exportRootId && exportPersons.some((p) => p.id === exportRootId)) {
@@ -198,97 +252,22 @@ export async function exportData(
     });
 
     // 3. Filter the payload
-    exportPersons = exportPersons.filter((p) => includedPersonIds.has(p.id));
-    exportRels = exportRels.filter(
+    exportPersons = allPersons.filter((p) => includedPersonIds.has(p.id));
+    exportRels = allRels.filter(
       (r) =>
         includedPersonIds.has(r.person_a) && includedPersonIds.has(r.person_b),
+    );
+    exportPrivateDetails = allPrivateDetails.filter((d) =>
+      includedPersonIds.has(d.person_id),
     );
   }
 
   return {
-    version: 2, // bumped for schema with birth_order + generation
+    version: 1,
     timestamp: new Date().toISOString(),
     persons: exportPersons,
     relationships: exportRels,
-  };
-}
-
-// ─── Import ───────────────────────────────────────────────────────────────────
-
-export async function importData(
-  importPayload:
-    | BackupPayload
-    | {
-        persons: PersonExport[];
-        relationships: Relationship[];
-      },
-) {
-  const supabaseResult = await verifyAdmin();
-  if ("error" in supabaseResult) return supabaseResult;
-  const supabase = supabaseResult;
-
-  if (!importPayload?.persons || !importPayload?.relationships) {
-    return { error: "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại file JSON." };
-  }
-
-  if (importPayload.persons.length === 0) {
-    return {
-      error: "File backup trống — không có thành viên nào để phục hồi.",
-    };
-  }
-
-  // 1. Xoá relationships trước (FK constraint)
-  const { error: delRelError } = await supabase
-    .from("relationships")
-    .delete()
-    .neq("id", "00000000-0000-0000-0000-000000000000");
-
-  if (delRelError)
-    return { error: "Lỗi khi xoá relationships cũ: " + delRelError.message };
-
-  // 2. Xoá persons
-  const { error: delPersonsError } = await supabase
-    .from("persons")
-    .delete()
-    .neq("id", "00000000-0000-0000-0000-000000000000");
-
-  if (delPersonsError)
-    return { error: "Lỗi khi xoá persons cũ: " + delPersonsError.message };
-
-  // 3. Insert persons (sanitized — chỉ giữ các field schema hiện tại)
-  const CHUNK = 200;
-  const persons = importPayload.persons.map(sanitizePerson);
-
-  for (let i = 0; i < persons.length; i += CHUNK) {
-    const chunk = persons.slice(i, i + CHUNK);
-    const { error } = await supabase.from("persons").insert(chunk);
-    if (error)
-      return {
-        error: `Lỗi khi import persons (chunk ${i / CHUNK + 1}): ${error.message}`,
-      };
-  }
-
-  // 4. Insert relationships (stripped of id/created_at to avoid conflicts)
-  const relationships = importPayload.relationships.map(sanitizeRelationship);
-
-  for (let i = 0; i < relationships.length; i += CHUNK) {
-    const chunk = relationships.slice(i, i + CHUNK);
-    const { error } = await supabase.from("relationships").insert(chunk);
-    if (error)
-      return {
-        error: `Lỗi khi import relationships (chunk ${i / CHUNK + 1}): ${error.message}`,
-      };
-  }
-
-  revalidatePath("/");
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/data");
-
-  return {
-    success: true,
-    imported: {
-      persons: persons.length,
-      relationships: relationships.length,
-    },
+    person_details_private: exportPrivateDetails,
+    custom_events: exportCustomEvents,
   };
 }

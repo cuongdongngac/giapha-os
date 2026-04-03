@@ -161,17 +161,18 @@ export default function PersonCard({ person }: PersonCardProps) {
         </div>
       </div>
 
-      {/* Truy Vết Tổ Tiên Button */}
-      <div className="px-2 pt-4 w-full mt-auto">
-        <Link
-          href={`/dashboard/lineage-trace?personId=${person.id}`}
-          onClick={(e) => e.stopPropagation()}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-amber-50 text-amber-700 text-xs font-medium rounded-lg hover:bg-amber-100 transition-colors border border-amber-200/60"
-        >
-          <Search className="size-3" />
-          Truy vết tổ tiên
-        </Link>
-      </div>
+      {/* Truy Vết Tổ Tiên Button - Hidden by default, shown on hover */}
+      <Link
+        href={`/dashboard/lineage-trace?personId=${person.id}`}
+        onClick={(e) => e.stopPropagation()}
+        className="absolute top-3 right-3 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-sm shadow-amber-200 flex items-center gap-1.5 transition-all opacity-0 group-hover:opacity-100 z-20"
+        title={`Truy vết tổ tiên ${person.full_name}`}
+      >
+        <Search className="size-3.5" />
+        <span className="text-[10px] font-bold uppercase tracking-wider">
+          Truy nguồn gốc
+        </span>
+      </Link>
     </button>
   );
 }

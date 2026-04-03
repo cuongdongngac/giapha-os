@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Person, Relationship } from "@/types";
 import {
   Search,
@@ -16,33 +16,43 @@ import {
   Sparkles,
   TreePine,
   Crown,
+  Heart,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import MemberDetailModal from "@/components/MemberDetailModal";
 import { createClient } from "@/utils/supabase/client";
-import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { DashboardProvider, useDashboard } from "@/components/DashboardContext";
-import { useSearchParams, useRouter } from "next/navigation";
+import Image from "next/image";
+import DefaultAvatar from "@/components/DefaultAvatar";
 
-// Simple export function for lineage
+// --- Types for Lineage ---
+interface LineageEntry {
+  person: Person;
+  spouses: Person[];
+}
+
+// --- Helpers ---
+const getAvatarBg = (gender: string) => {
+  if (gender === "male") return "bg-sky-500";
+  if (gender === "female") return "bg-rose-500";
+  return "bg-stone-500";
+};
+
+// --- Export Component ---
 function LineageExportButton({
-  persons,
-  relationships,
   selectedPerson,
   lineageRef,
   lineage,
-  getBranchName,
 }: {
-  persons: Person[];
-  relationships: Relationship[];
   selectedPerson: Person | null;
   lineageRef: React.RefObject<HTMLDivElement | null>;
-  lineage: Person[];
-  getBranchName: (branchId: number | null) => string;
+  lineage: LineageEntry[];
 }) {
   const [isExporting, setIsExporting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { view } = useDashboard();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -61,15 +71,16 @@ function LineageExportButton({
     try {
       switch (format) {
         case "html":
-          const htmlContent = generateLineageHTML(
-            selectedPerson,
-            lineage,
-            getBranchName,
-          );
-          downloadHTMLFile(
-            htmlContent,
-            `lineage-${selectedPerson.full_name}.html`,
-          );
+          const htmlContent = generateLineageHTML(selectedPerson, lineage);
+          const blob = new Blob([htmlContent], {
+            type: "text/html;charset=utf-8",
+          });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `lineage-${selectedPerson.full_name}.html`;
+          link.click();
+          URL.revokeObjectURL(url);
           break;
         case "png":
           if (lineageRef.current) {
@@ -79,32 +90,38 @@ function LineageExportButton({
               pixelRatio: 2,
               backgroundColor: "#ffffff",
             });
-            const link = document.createElement("a");
-            link.download = `lineage-${selectedPerson.full_name}.png`;
-            link.href = dataUrl;
-            link.click();
+            const a = document.createElement("a");
+            a.download = `lineage-${selectedPerson.full_name}.png`;
+            a.href = dataUrl;
+            a.click();
           }
           break;
         case "pdf":
           if (lineageRef.current) {
             const { toPng } = await import("html-to-image");
-            const jsPDF = await import("jspdf");
+            const { jsPDF } = await import("jspdf");
             const dataUrl = await toPng(lineageRef.current, {
               quality: 0.95,
               pixelRatio: 2,
               backgroundColor: "#ffffff",
             });
-            const img = new Image();
-            img.src = dataUrl;
-            img.onload = () => {
-              const pdf = new jsPDF.jsPDF({
-                orientation: "portrait",
-                unit: "px",
-                format: [img.width, img.height],
-              });
-              pdf.addImage(dataUrl, "PNG", 0, 0, img.width, img.height);
-              pdf.save(`lineage-${selectedPerson.full_name}.pdf`);
-            };
+            const pdf = new jsPDF({
+              orientation: "portrait",
+              unit: "px",
+              format: [
+                lineageRef.current.scrollWidth,
+                lineageRef.current.scrollHeight,
+              ],
+            });
+            pdf.addImage(
+              dataUrl,
+              "PNG",
+              0,
+              0,
+              lineageRef.current.scrollWidth,
+              lineageRef.current.scrollHeight,
+            );
+            pdf.save(`lineage-${selectedPerson.full_name}.pdf`);
           }
           break;
       }
@@ -116,43 +133,10 @@ function LineageExportButton({
     }
   };
 
-  const generateLineageHTML = (
-    person: Person,
-    lineage: Person[],
-    getBranchName: (branchId: number | null) => string,
-  ) => {
-    // Function to get generation title based on index
-    const getGenerationTitle = (index: number) => {
-      const titles = [
-        "Đời thứ cha mẹ",
-        "Đời thứ ông bà",
-        "Đời thứ cụ kỵ",
-        "Đời thứ sơ kỵ",
-        "Đời thứ cao kỵ",
-        "Đời thứ tổ tiên thứ 6",
-        "Đời thứ tổ tiên thứ 7",
-        "Đời thứ tổ tiên thứ 8",
-        "Đời thứ tổ tiên thứ 9",
-        "Đời thứ tổ tiên thứ 10",
-      ];
-      return titles[index] || `Đời thứ tổ tiên thứ ${index + 1}`;
-    };
-
-    // Function to get relationship title based on index
+  const generateLineageHTML = (person: Person, lineage: LineageEntry[]) => {
     const getRelationshipTitle = (index: number) => {
-      const relationships = [
-        "Cha/Mẹ",
-        "Ông/Bà",
-        "Cụ/Kỵ",
-        "Sơ kỵ",
-        "Cao kỵ",
-        "Tổ tiên thứ 6",
-        "Tổ tiên thứ 7",
-        "Tổ tiên thứ 8",
-        "Tổ tiên thứ 9",
-        "Tổ tiên thứ 10",
-      ];
-      return relationships[index] || `Tổ tiên thứ ${index + 1}`;
+      const relationships = ["Cha/Mẹ", "Ông/Bà", "Cụ/Kỵ", "Sơ kỵ", "Cao kỵ"];
+      return relationships[index] || `Tổ tiên đời thứ ${index + 1}`;
     };
 
     return `
@@ -160,356 +144,190 @@ function LineageExportButton({
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dòng dõi của ${person.full_name}</title>
+    <title>Truy vết nguồn gốc: ${person.full_name}</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        .header {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 2.5rem;
-            font-weight: 700;
-        }
-        .content {
-            padding: 40px;
-        }
-        .person-card {
-            background: linear-gradient(135deg, #ffffff 0%, #fef9c3 100%);
-            border: 2px solid #f59e0b;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.2);
-            transition: transform 0.3s ease;
-        }
-        .person-card:hover {
-            transform: translateY(-2px);
-        }
-        .person-name {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 10px;
-        }
-        .person-details {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        .detail-item {
-            background: #f3f4f6;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            color: #374151;
-        }
-        .detail-item strong {
-            color: #1f2937;
-        }
-        .generation-badge {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-            display: inline-block;
-        }
-        .generation-info {
-            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
-            border: 1px solid #f59e0b;
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 15px;
-        }
-        .generation-title {
-            font-weight: 700;
-            color: #d97706;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
-        .person-with-title {
-            font-weight: 600;
-            color: #92400e;
-            font-size: 1.1rem;
-            margin-bottom: 3px;
-        }
-        .relationship-title {
-            color: #b45309;
-            font-size: 0.9rem;
-        }
-        .controls {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            padding: 15px;
-            z-index: 1000;
-        }
-        .controls button {
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            margin: 5px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        .controls button:hover {
-            background: #2563eb;
-        }
-        @media print {
-            .controls { display: none; }
-            body { padding: 0; }
-            .container { box-shadow: none; border-radius: 0; }
-        }
+        body { font-family: sans-serif; padding: 40px; background: #f5f5f4; color: #444; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: #b45309; margin-bottom: 40px; }
+        .entry { display: flex; gap: 20px; margin-bottom: 30px; position: relative; }
+        .entry::before { content: ''; position: absolute; left: 15px; top: 40px; bottom: -30px; width: 2px; background: #fbbf24; opacity: 0.3; }
+        .entry:last-child::before { display: none; }
+        .dot { width: 32px; height: 32px; border-radius: 50%; background: #fef3c7; border: 2px solid #fbbf24; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #b45309; z-index: 1; shrink: 0; }
+        .card { flex: 1; padding: 20px; border: 1px solid #e7e5e4; border-radius: 16px; }
+        .title { font-size: 12px; font-weight: bold; color: #d97706; text-transform: uppercase; margin-bottom: 5px; }
+        .name { font-size: 18px; font-weight: bold; color: #1c1917; }
+        .spouses { margin-top: 10px; font-size: 14px; color: #78716c; }
+        .details { font-size: 13px; color: #a8a29e; margin-top: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🌳 Dòng Dõi Gia Phả</h1>
-            <h2>${person.full_name}</h2>
-        </div>
-        <div class="content">
-            ${lineage
-              .map(
-                (ancestor, index) => `
-                <div class="person-card">
-                    <div class="generation-badge">${index + 1}</div>
-                    <div class="generation-info">
-                        <div class="generation-title">${getGenerationTitle(index)}</div>
-                        <div class="person-with-title">${ancestor.gender === "female" ? "Bà " : "Ông "}${ancestor.full_name}</div>
-                        <div class="relationship-title">${getRelationshipTitle(index)}</div>
-                    </div>
-                    <div class="person-name">${ancestor.full_name}</div>
-                    <div class="person-details">
-                        ${ancestor.birth_year ? `<div class="detail-item"><strong>Năm sinh:</strong> ${ancestor.birth_year}</div>` : ""}
-                        ${ancestor.generation && ancestor.branch_id ? `<div class="detail-item"><strong>Chi:</strong> ${getBranchName(ancestor.branch_id)} - Đời: ${ancestor.generation}</div>` : ""}
-                        ${ancestor.gender ? `<div class="detail-item"><strong>Giới tính:</strong> ${ancestor.gender === "male" ? "Nam" : "Nữ"}</div>` : ""}
-                    </div>
+        <h1>Dòng dõi của ${person.full_name}</h1>
+        ${lineage
+          .map(
+            (entry, i) => `
+            <div class="entry">
+                <div class="dot">${i + 1}</div>
+                <div class="card">
+                    <div class="title">${getRelationshipTitle(i)}</div>
+                    <div class="name">${entry.person.full_name}</div>
+                    ${entry.spouses.length > 0 ? `<div class="spouses">Kết hôn với: ${entry.spouses.map((s) => s.full_name).join(", ")}</div>` : ""}
+                    <div class="details">Năm sinh: ${entry.person.birth_year || "N/A"} | Đời thứ: ${entry.person.generation || "N/A"}</div>
                 </div>
-            `,
-              )
-              .join("")}
-        </div>
-    </div>
-    <div class="controls">
-        <button onclick="window.print()">🖨️ In</button>
-        <button onclick="window.close()">✖️ Đóng</button>
+            </div>
+        `,
+          )
+          .join("")}
     </div>
 </body>
 </html>`;
   };
 
-  const downloadHTMLFile = (content: string, filename: string) => {
-    const blob = new Blob([content], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
   return (
-    <div className="flex items-center gap-2 print:hidden" ref={menuRef}>
-      <div className="relative">
-        <button
-          onClick={() => setShowMenu(!showMenu)}
-          disabled={isExporting}
-          className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-xl hover:bg-amber-700 transition-all shadow-md disabled:opacity-50 font-medium"
-        >
-          <Download className="w-4 h-4" />
-          <span>Xuất file</span>
-          <ChevronDown
-            className={`w-4 h-4 transition-transform ${showMenu ? "rotate-180" : ""}`}
-          />
-        </button>
+    <div className="relative" ref={menuRef}>
+      <button
+        onClick={() => setShowMenu(!showMenu)}
+        disabled={isExporting}
+        className="flex items-center justify-center px-4 h-10 rounded-full bg-white/80 backdrop-blur-md shadow-sm border border-stone-200/60 text-stone-600 hover:bg-white hover:text-stone-900 hover:shadow-md transition-all disabled:opacity-50 gap-2"
+      >
+        {isExporting ? (
+          <Loader2 className="size-4 animate-spin" />
+        ) : (
+          <Download className="size-4" />
+        )}
+        <span className="text-sm font-medium">Xuất file</span>
+      </button>
 
-        <AnimatePresence>
-          {showMenu && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-stone-100 z-50 py-1"
+      <AnimatePresence>
+        {showMenu && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="absolute top-full mt-2 right-0 w-48 bg-white rounded-2xl shadow-xl border border-stone-200/60 py-2 z-50 overflow-hidden"
+          >
+            <button
+              onClick={() => handleExport("png")}
+              className="w-full px-4 py-2.5 text-left text-sm text-stone-700 hover:bg-amber-50 flex items-center gap-3"
             >
-              <button
-                onClick={() => handleExport("html")}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-amber-50 transition-colors text-stone-600 hover:text-amber-700"
-              >
-                <Globe className="w-4 h-4" />
-                <span className="text-sm font-medium">Xuất HTML</span>
-              </button>
-              <button
-                onClick={() => handleExport("png")}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-amber-50 transition-colors text-stone-600 hover:text-amber-700"
-              >
-                <FileImage className="w-4 h-4" />
-                <span className="text-sm font-medium">Xuất PNG</span>
-              </button>
-              <button
-                onClick={() => handleExport("pdf")}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-amber-50 transition-colors text-stone-600 hover:text-amber-700"
-              >
-                <FileText className="w-4 h-4" />
-                <span className="text-sm font-medium">Xuất PDF</span>
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              <FileImage className="size-4 text-blue-500" />{" "}
+              <span>Ảnh (PNG)</span>
+            </button>
+            <button
+              onClick={() => handleExport("pdf")}
+              className="w-full px-4 py-2.5 text-left text-sm text-stone-700 hover:bg-amber-50 flex items-center gap-3"
+            >
+              <FileText className="size-4 text-red-500" />{" "}
+              <span>Tài liệu (PDF)</span>
+            </button>
+            <button
+              onClick={() => handleExport("html")}
+              className="w-full px-4 py-2.5 text-left text-sm text-stone-700 hover:bg-amber-50 flex items-center gap-3"
+            >
+              <Globe className="size-4 text-emerald-500" />{" "}
+              <span>Web (HTML)</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function LineagePageContent() {
-  const { setMemberModalId } = useDashboard();
+// --- Main Page Component ---
+function LineageTraceContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const personId = searchParams.get("personId");
-  const isFromModal = searchParams.get("source") === "modal";
+  const { setMemberModalId, showAvatar } = useDashboard();
 
   const [persons, setPersons] = useState<Person[]>([]);
   const [relationships, setRelationships] = useState<Relationship[]>([]);
-  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
-  const [lineage, setLineage] = useState<Person[]>([]);
-  const [branches, setBranches] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lineage, setLineage] = useState<LineageEntry[]>([]);
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const lineageRef = useRef<HTMLDivElement>(null);
-
-  const handleBack = () => {
-    if (isFromModal) {
-      window.close();
-    } else {
-      router.push("/dashboard");
-    }
-  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const supabase = createClient();
+        const { data: pData } = await supabase.from("persons").select("*");
+        const { data: rData } = await supabase
+          .from("relationships")
+          .select("*");
 
-        // Helper to fetch all records bypassing the 1000 limit
-        async function fetchAll(
-          table: string,
-          columns: string,
-          orderColumn?: string,
-        ) {
-          let allData: any[] = [];
-          let page = 0;
-          const pageSize = 1000;
-          while (true) {
-            let query = supabase
-              .from(table)
-              .select(columns)
-              .range(page * pageSize, (page + 1) * pageSize - 1);
-            if (orderColumn) {
-              query = query.order(orderColumn, {
-                ascending: true,
-                nullsFirst: false,
-              });
-            }
-            const { data, error } = await query;
-            if (error) {
-              console.error(`Error fetching ${table}:`, error);
-              break;
-            }
-            if (data && data.length > 0) {
-              allData = [...allData, ...data];
-              if (data.length < pageSize) break;
-            } else {
-              break;
-            }
-            page++;
-          }
-          return allData;
-        }
+        setPersons(pData || []);
+        setRelationships(rData || []);
 
-        const personsData = await fetchAll("persons", "*", "birth_year");
-        const relationshipsData = await fetchAll("relationships", "*");
-
-        const { data: branchesData } = await supabase
-          .from("branches")
-          .select("id, name");
-
-        setPersons(personsData || []);
-        setRelationships(relationshipsData || []);
-        setBranches(branchesData || []);
-
-        if (personId) {
-          const person = personsData?.find((p) => p.id === personId);
+        if (personId && pData) {
+          const person = pData.find((p) => p.id === personId);
           if (person) {
             setSelectedPerson(person);
-            setTimeout(() => {
-              const lineageData = findPaternalLineage(
-                person.id,
-                personsData || [],
-                relationshipsData || [],
-              );
-              setLineage(lineageData);
-            }, 100);
+            const trace = buildLineage(person.id, pData, rData || []);
+            setLineage(trace);
           }
         }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      } catch (err) {
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [personId]);
 
-  const findPaternalLineage = (
-    personId: string,
-    personsList: Person[],
-    relationshipsList: Relationship[],
-  ): Person[] => {
-    const lineage: Person[] = [];
-    let currentId: string | null = personId;
-
-    const personsMap = new Map(personsList.map((p: Person) => [p.id, p]));
+  const buildLineage = (
+    startId: string,
+    pList: Person[],
+    rList: Relationship[],
+  ): LineageEntry[] => {
+    const result: LineageEntry[] = [];
+    const pMap = new Map(pList.map((p) => [p.id, p]));
+    let currentId: string | null = startId;
 
     while (currentId) {
-      const fatherRelationship = relationshipsList.find(
-        (rel) =>
-          rel.person_b === currentId &&
-          (rel.type === "biological_child" || rel.type === "adopted_child") &&
-          personsMap.get(rel.person_a)?.gender === "male",
+      const person = pMap.get(currentId);
+      if (!person) break;
+
+      // Find spouses
+      const spouses = rList
+        .filter(
+          (r) =>
+            r.type === "marriage" &&
+            (r.person_a === currentId || r.person_b === currentId),
+        )
+        .map((r) =>
+          pMap.get(r.person_a === currentId ? r.person_b : r.person_a),
+        )
+        .filter(Boolean) as Person[];
+
+      // Add the current person to the trace
+      result.push({ person, spouses });
+
+      // Find all parents
+      const parentRels = rList.filter(
+        (r) =>
+          r.person_b === currentId &&
+          (r.type === "biological_child" || r.type === "adopted_child"),
       );
 
-      if (fatherRelationship) {
-        const father = personsMap.get(fatherRelationship.person_a);
-        if (father) {
-          lineage.push(father);
-          currentId = father.id;
+      if (parentRels.length > 0) {
+        // Find bloodline parent (not in-law)
+        const bloodlineParentRel = parentRels.find(
+          (r) => !pMap.get(r.person_a)?.is_in_law,
+        );
+
+        // Priority: 1. Bloodline parent, 2. Any available parent (usually the first one found)
+        const nextParentRel = bloodlineParentRel || parentRels[0];
+        const nextParent = pMap.get(nextParentRel.person_a);
+
+        if (nextParent) {
+          // Check for infinite loops
+          if (result.some((entry) => entry.person.id === nextParent.id)) {
+            break;
+          }
+          currentId = nextParent.id;
         } else {
           break;
         }
@@ -517,237 +335,193 @@ function LineagePageContent() {
         break;
       }
     }
-
-    return lineage;
+    return result;
   };
 
-  const handlePersonSelect = (person: Person) => {
-    setSelectedPerson(person);
-    const lineageData = findPaternalLineage(person.id, persons, relationships);
-    setLineage(lineageData);
+  const getRelationshipTitle = (index: number) => {
+    if (index === 0) return "Bản thân";
+    const titles = ["Cha/Mẹ", "Ông/Bà", "Cụ/Kỵ", "Sơ kỵ", "Cao kỵ"];
+    return titles[index - 1] || `Tổ tiên đời thứ ${index}`;
   };
 
-  const getBranchName = (branchId: number | null) => {
-    if (!branchId) return "N/A";
-    const branch = branches.find((b) => b.id === branchId);
-    return branch?.name || "N/A";
-  };
-
-  const handlePersonClick = (personId: string) => {
-    setMemberModalId(personId);
-  };
-
-  if (loading) {
+  if (loading)
     return (
-      <div className="min-h-screen bg-gradient-to-br from-stone-50 via-white to-amber-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-600 mx-auto mb-4" />
-          <p className="text-stone-600 text-lg">Đang tải dữ liệu gia phả...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+        <Loader2 className="size-8 animate-spin text-amber-600" />
       </div>
     );
-  }
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/dashboard");
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-white to-amber-50">
-      <div className="bg-gradient-to-r from-stone-600 via-amber-600 to-stone-600 shadow-lg print:hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-amber-400 rounded-full blur-xl opacity-20 animate-pulse"></div>
-                <div className="relative bg-white/20 backdrop-blur-sm p-3 rounded-2xl border border-white/30 shadow-lg">
-                  <TreePine className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <div className="text-white">
-                <motion.h1
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                  className="text-2xl font-bold mb-1 flex items-center gap-2"
-                >
-                  Truy Vết Tổ Tiên
-                  <Crown className="w-5 h-5 text-amber-200" />
-                </motion.h1>
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-                  className="text-stone-100 text-sm"
-                >
-                  Khám phá dòng dõi gia phả ngược về các thế hệ trước
-                </motion.p>
-              </div>
+    <div className="min-h-screen bg-stone-50/50 pb-20">
+      {/* Header */}
+      <div className="bg-white border-b border-stone-200 sticky top-0 z-30">
+        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-2 text-stone-600 hover:text-stone-900 transition-colors"
+          >
+            <ChevronLeft className="size-5" />
+            <span className="font-medium">Quay lại</span>
+          </button>
+
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-100 rounded-lg text-amber-700">
+              <TreePine className="size-5" />
             </div>
-            <div className="flex items-center space-x-4">
-              {selectedPerson && lineage.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                >
-                  <LineageExportButton
-                    persons={persons}
-                    relationships={relationships}
-                    selectedPerson={selectedPerson}
-                    lineageRef={lineageRef}
-                    lineage={lineage}
-                    getBranchName={getBranchName}
-                  />
-                </motion.div>
-              )}
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="print:hidden"
-              >
-                <button
-                  onClick={handleBack}
-                  className="flex items-center space-x-2 px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-xl transition-all duration-300 border border-white/30 shadow-md"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span className="font-medium">
-                    {isFromModal ? "Đóng trang" : "Quay về Dashboard"}
-                  </span>
-                </button>
-              </motion.div>
-            </div>
+            <h1 className="text-lg font-bold text-stone-900">
+              Truy vết nguồn gốc
+            </h1>
           </div>
+
+          <LineageExportButton
+            selectedPerson={selectedPerson}
+            lineageRef={lineageRef}
+            lineage={lineage}
+          />
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {selectedPerson && lineage.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-            className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-amber-200/60 p-10"
+      <div className="max-w-3xl mx-auto px-4 mt-10">
+        {!selectedPerson ? (
+          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-stone-300">
+            <Users className="size-12 text-stone-300 mx-auto mb-4" />
+            <p className="text-stone-500">
+              Vui lòng chọn một thành viên để bắt đầu truy vết
+            </p>
+          </div>
+        ) : (
+          <div
             ref={lineageRef}
+            className="space-y-8 relative before:absolute before:left-[23px] before:top-10 before:bottom-10 before:w-0.5 before:bg-gradient-to-b before:from-amber-400 before:via-amber-200 before:to-transparent"
           >
-            <div className="mb-10 text-center">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-                className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-8 py-4 rounded-2xl shadow-2xl"
-              >
-                <Sparkles className="w-6 h-6" />
-                <span className="text-xl font-bold">
-                  Dòng Dõi của {selectedPerson.full_name}
-                </span>
-              </motion.div>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-                className="text-stone-600 text-lg"
-              >
-                Hiển thị đường dõi cha → ông → cụ... theo thứ tự từ gần đến xa
-              </motion.p>
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-full border border-amber-200 text-sm font-bold mb-4">
+                <Sparkles className="size-4" />
+                Dòng dõi của {selectedPerson.full_name}
+              </div>
             </div>
-            <LineageDisplay
-              lineage={lineage}
-              getBranchName={getBranchName}
-              onPersonClick={handlePersonClick}
-            />
-          </motion.div>
-        )}
 
-        {selectedPerson && lineage.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-amber-200/60 p-16 text-center"
-          >
-            <div className="max-w-md mx-auto">
+            {lineage.map((entry, index) => (
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-                className="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-amber-200 shadow-2xl"
+                key={entry.person.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="flex gap-6 items-start group"
               >
-                <Search className="w-12 h-12 text-amber-600" />
-              </motion.div>
-              <motion.h3
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-                className="text-2xl font-bold text-stone-900 mb-4"
-              >
-                Không Tìm Thấy Dòng Dõi
-              </motion.h3>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-                className="text-stone-600 text-lg leading-relaxed"
-              >
-                Không thể tìm thấy thông tin cha của{" "}
-                <span className="font-semibold text-amber-600">
-                  {selectedPerson.full_name}
-                </span>
-              </motion.p>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-                className="text-stone-500 mt-4 text-sm"
-              >
-                Người này có thể là thế hệ đầu tiên trong gia phả
-              </motion.p>
-            </div>
-          </motion.div>
-        )}
+                {/* Step Circle */}
+                <div className="relative z-10 flex-shrink-0 mt-2">
+                  <div
+                    className={`size-12 rounded-2xl flex items-center justify-center shadow-lg border-2 transition-transform group-hover:scale-110 ${index === 0 ? "bg-amber-500 border-amber-400 text-white" : "bg-white border-amber-200 text-amber-600"}`}
+                  >
+                    <span className="text-lg font-bold">{index + 1}</span>
+                  </div>
+                </div>
 
-        {!selectedPerson && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-amber-200/60 p-16 text-center"
-          >
-            <div className="max-w-md mx-auto">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-                className="w-24 h-24 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-amber-200 shadow-2xl"
-              >
-                <Users className="w-12 h-12 text-amber-600" />
+                {/* Content Card */}
+                <div className="flex-1 bg-white rounded-3xl p-6 shadow-sm border border-stone-200 hover:border-amber-300 hover:shadow-md transition-all">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <span className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] mb-1 block">
+                        {getRelationshipTitle(index)}
+                      </span>
+                      <h3 className="text-xl font-bold text-stone-900 group-hover:text-amber-700 transition-colors">
+                        {entry.person.full_name}
+                      </h3>
+                    </div>
+                    {entry.person.generation && (
+                      <div className="px-3 py-1 bg-stone-100 rounded-full text-[10px] font-bold text-stone-500">
+                        Đời thứ {entry.person.generation}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-stone-50 rounded-2xl p-3 border border-stone-100">
+                      <p className="text-[10px] text-stone-400 font-bold uppercase mb-1">
+                        Năm sinh
+                      </p>
+                      <p className="font-bold text-stone-700">
+                        {entry.person.birth_year || "N/A"}
+                      </p>
+                    </div>
+                    <div className="bg-stone-50 rounded-2xl p-3 border border-stone-100">
+                      <p className="text-[10px] text-stone-400 font-bold uppercase mb-1">
+                        Giới tính
+                      </p>
+                      <p className="font-bold text-stone-700">
+                        {entry.person.gender === "male" ? "Nam" : "Nữ"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {entry.spouses.length > 0 && (
+                    <div className="pt-4 border-t border-stone-100">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Heart className="size-3 text-rose-400 fill-rose-400" />
+                        <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">
+                          Bạn đời (Rẽ nhánh tại đây)
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {entry.spouses.map((spouse) => (
+                          <button
+                            key={spouse.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(
+                                `/dashboard/lineage-trace?personId=${spouse.id}`,
+                              );
+                            }}
+                            className="flex items-center gap-2 bg-rose-50/50 px-3 py-1.5 rounded-xl border border-rose-100 hover:border-rose-300 hover:bg-rose-100 transition-all group/spouse"
+                            title={`Truy vết từ ${spouse.full_name}`}
+                          >
+                            <div
+                              className={`size-6 rounded-full overflow-hidden shrink-0 ${getAvatarBg(spouse.gender)}`}
+                            >
+                              {showAvatar && spouse.avatar_url ? (
+                                <Image
+                                  unoptimized
+                                  src={spouse.avatar_url}
+                                  alt={spouse.full_name}
+                                  width={24}
+                                  height={24}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <DefaultAvatar
+                                  gender={spouse.gender}
+                                />
+                              )}
+                            </div>
+                            <span className="text-xs font-bold text-stone-700 group-hover/spouse:text-rose-700">
+                              {spouse.full_name}
+                            </span>
+                            <ChevronRight className="size-3 text-rose-300 group-hover/spouse:translate-x-0.5 transition-transform" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => setMemberModalId(entry.person.id)}
+                    className="mt-6 w-full py-3 bg-stone-50 hover:bg-amber-50 text-stone-500 hover:text-amber-700 text-xs font-bold rounded-2xl transition-colors border border-stone-100 hover:border-amber-200"
+                  >
+                    Xem chi tiết
+                  </button>
+                </div>
               </motion.div>
-              <motion.h3
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-                className="text-2xl font-bold text-stone-900 mb-4"
-              >
-                Bắt Đầu Truy Vết
-              </motion.h3>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-                className="text-stone-600 text-lg leading-relaxed mb-4"
-              >
-                Vui lòng chọn thành viên từ PersonCard để bắt đầu truy vết tổ
-                tiên
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-                className="flex items-center justify-center gap-2 text-amber-600"
-              >
-                <ChevronRight className="w-5 h-5" />
-                <span className="font-medium">
-                  Chọn người từ PersonCard để bắt đầu
-                </span>
-              </motion.div>
-            </div>
-          </motion.div>
+            ))}
+          </div>
         )}
       </div>
 
@@ -756,144 +530,10 @@ function LineagePageContent() {
   );
 }
 
-function LineageDisplay({
-  lineage,
-  getBranchName,
-  onPersonClick,
-}: {
-  lineage: Person[];
-  getBranchName: (branchId: number | null) => string;
-  onPersonClick: (personId: string) => void;
-}) {
-  // Function to get generation title based on index
-  const getGenerationTitle = (index: number) => {
-    const titles = [
-      "Đời thứ cha mẹ",
-      "Đời thứ ông bà",
-      "Đời thứ cụ kỵ",
-      "Đời thứ sơ kỵ",
-      "Đời thứ cao kỵ",
-      "Đời thứ tổ tiên thứ 6",
-      "Đời thứ tổ tiên thứ 7",
-      "Đời thứ tổ tiên thứ 8",
-      "Đời thứ tổ tiên thứ 9",
-      "Đời thứ tổ tiên thứ 10",
-    ];
-    return titles[index] || `Đời thứ tổ tiên thứ ${index + 1}`;
-  };
-
-  // Function to get relationship title based on index
-  const getRelationshipTitle = (index: number) => {
-    const relationships = [
-      "Cha/Mẹ",
-      "Ông/Bà",
-      "Cụ/Kỵ",
-      "Sơ kỵ",
-      "Cao kỵ",
-      "Tổ tiên thứ 6",
-      "Tổ tiên thứ 7",
-      "Tổ tiên thứ 8",
-      "Tổ tiên thứ 9",
-      "Tổ tiên thứ 10",
-    ];
-    return relationships[index] || `Tổ tiên thứ ${index + 1}`;
-  };
-
-  return (
-    <div className="space-y-4">
-      {lineage.map((person, index) => (
-        <motion.div
-          key={person.id}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: index * 0.05 }}
-          className="flex items-stretch gap-4"
-        >
-          {/* Generation indicator */}
-          <div className="flex flex-col items-center gap-1 w-10 shrink-0">
-            <div className="w-8 h-8 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-700 font-bold text-sm shadow-sm">
-              {index + 1}
-            </div>
-            {index < lineage.length - 1 && (
-              <div className="w-0.5 grow bg-amber-100 rounded-full" />
-            )}
-          </div>
-
-          {/* Card */}
-          <button
-            onClick={() => onPersonClick(person.id)}
-            className="flex-1 text-left bg-white border border-stone-200 rounded-2xl p-4 hover:border-amber-400 hover:shadow-md transition-all group relative overflow-hidden"
-          >
-            <div className="flex items-center gap-4 relative z-10">
-              <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-sm ${
-                  person.gender === "female" ? "bg-rose-400" : "bg-sky-400"
-                }`}
-              >
-                {person.full_name.charAt(0)}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <h3 className="font-bold text-stone-900 truncate group-hover:text-amber-700 transition-colors">
-                    {person.full_name}
-                  </h3>
-                  <span className="text-[10px] px-2 py-0.5 bg-stone-100 text-stone-500 rounded-full font-medium">
-                    {getRelationshipTitle(index)}
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-500">
-                  {person.birth_year && (
-                    <span className="flex items-center gap-1">
-                      <span className="w-1 h-1 rounded-full bg-stone-300" />
-                      Năm sinh:{" "}
-                      <span className="font-semibold text-stone-700">
-                        {person.birth_year}
-                      </span>
-                    </span>
-                  )}
-                  {person.generation && (
-                    <span className="flex items-center gap-1">
-                      <span className="w-1 h-1 rounded-full bg-stone-300" />
-                      Đời:{" "}
-                      <span className="font-semibold text-stone-700">
-                        {person.generation}
-                      </span>
-                    </span>
-                  )}
-                  {person.branch_id && (
-                    <span className="flex items-center gap-1">
-                      <span className="w-1 h-1 rounded-full bg-stone-300" />
-                      Chi:{" "}
-                      <span className="font-semibold text-stone-700">
-                        {getBranchName(person.branch_id)}
-                      </span>
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="hidden sm:block text-right shrink-0">
-                <div className="text-[10px] text-amber-600 font-bold uppercase tracking-wider">
-                  {getGenerationTitle(index)}
-                </div>
-                <div className="text-xs text-stone-400 italic">
-                  {person.gender === "female" ? "Bà" : "Ông"}
-                </div>
-              </div>
-            </div>
-          </button>
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
 export default function LineageTracePage() {
   return (
     <DashboardProvider>
-      <LineagePageContent />
+      <LineageTraceContent />
     </DashboardProvider>
   );
 }

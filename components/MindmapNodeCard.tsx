@@ -2,6 +2,8 @@
 
 import { Person } from "@/types";
 import DefaultAvatar from "./DefaultAvatar";
+import { Search } from "lucide-react";
+import Link from "next/link";
 
 interface MindmapNodeCardProps {
   person: Person;
@@ -30,7 +32,7 @@ export default function MindmapNodeCard({
       >
         <div className="flex flex-1 items-center gap-2.5 min-w-0">
           {showAvatar && (
-            <div 
+            <div
               className="relative shrink-0 cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
@@ -88,7 +90,15 @@ export default function MindmapNodeCard({
         </div>
       </div>
 
-
+      {/* Truy Vết Tổ Tiên Button - Hidden by default, shown on hover */}
+      <Link
+        href={`/dashboard/lineage-trace?personId=${person.id}`}
+        onClick={(e) => e.stopPropagation()}
+        className="absolute top-1 right-1 p-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg shadow-sm shadow-amber-200 transition-all opacity-0 group-hover/card:opacity-100 z-50"
+        title={`Truy vết tổ tiên ${person.full_name}`}
+      >
+        <Search className="size-3" />
+      </Link>
     </div>
   );
 }

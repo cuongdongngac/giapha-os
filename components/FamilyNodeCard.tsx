@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useDashboard } from "./DashboardContext";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import DefaultAvatar from "./DefaultAvatar";
+import { Search } from "lucide-react";
+import Link from "next/link";
 
 interface FamilyNodeCardProps {
   person: Person;
@@ -124,6 +126,16 @@ export default function FamilyNodeCard({
           {person.full_name}
         </span>
       </div>
+
+      {/* Truy Vết Tổ Tiên Button - Hidden by default, shown on hover */}
+      <Link
+        href={`/dashboard/lineage-trace?personId=${person.id}`}
+        onClick={(e) => e.stopPropagation()}
+        className="absolute top-1 right-1 p-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg shadow-sm shadow-amber-200 transition-all opacity-0 group-hover:opacity-100 z-50"
+        title={`Truy vết tổ tiên ${person.full_name}`}
+      >
+        <Search className="size-3" />
+      </Link>
 
       {/* Info Section */}
       <div className="flex flex-col items-center gap-0.5 text-center">
