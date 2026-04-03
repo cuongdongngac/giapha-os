@@ -136,8 +136,9 @@ function LineageExportButton({
 
   const generateLineageHTML = (person: Person, lineage: LineageEntry[]) => {
     const getRelationshipTitle = (index: number) => {
-      const relationships = ["Cha/Mẹ", "Ông/Bà", "Cụ/Kỵ", "Sơ kỵ", "Cao kỵ"];
-      return relationships[index] || `Tổ tiên đời thứ ${index + 1}`;
+      if (index === 0) return "Bản thân";
+      const titles = ["Cha/Mẹ", "Ông/Bà", "Cụ/Kỵ", "Sơ kỵ", "Cao kỵ"];
+      return titles[index - 1] || `Tổ tiên đời thứ ${index}`;
     };
 
     return `
