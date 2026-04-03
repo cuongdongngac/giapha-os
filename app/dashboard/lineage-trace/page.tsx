@@ -25,6 +25,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { DashboardProvider, useDashboard } from "@/components/DashboardContext";
 import Image from "next/image";
 import DefaultAvatar from "@/components/DefaultAvatar";
+import { Suspense } from "react";
 
 // --- Types for Lineage ---
 interface LineageEntry {
@@ -252,24 +253,39 @@ function LineageTraceContent() {
     const fetchData = async () => {
       try {
         const supabase = createClient();
-        const { data: pData } = await supabase.from("persons").select("*");
-        const { data: rData } = await supabase
-          .from("relationships")
-          .select("*");
+
+        // Fetch function without Supabase-side range limits as requested
+        async function fetchAll(table: string) {
+          const { data, error } = await supabase.from(table).select("*");
+
+          if (error) throw error;
+          return data || [];
+        }
+
+        const pData = await fetchAll("persons");
+        const rData = await fetchAll("relationships");
 
         setPersons(pData || []);
         setRelationships(rData || []);
 
         if (personId && pData) {
-          const person = pData.find((p) => p.id === personId);
+          // Normalize IDs to handle potential case sensitivity or whitespace issues
+          const targetId = personId.trim().toLowerCase();
+          const person = pData.find(
+            (p: Person) => p.id.toLowerCase() === targetId,
+          );
           if (person) {
             setSelectedPerson(person);
             const trace = buildLineage(person.id, pData, rData || []);
             setLineage(trace);
+          } else {
+            console.warn(
+              `Person with ID ${targetId} not found in fetched data. Total persons: ${pData.length}`,
+            );
           }
         }
       } catch (err) {
-        console.error(err);
+        console.error("Fetch data error:", err);
       } finally {
         setLoading(false);
       }
@@ -497,9 +513,7 @@ function LineageTraceContent() {
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <DefaultAvatar
-                                  gender={spouse.gender}
-                                />
+                                <DefaultAvatar gender={spouse.gender} />
                               )}
                             </div>
                             <span className="text-xs font-bold text-stone-700 group-hover/spouse:text-rose-700">
@@ -532,8 +546,16 @@ function LineageTraceContent() {
 
 export default function LineageTracePage() {
   return (
-    <DashboardProvider>
-      <LineageTraceContent />
-    </DashboardProvider>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-stone-50">
+          <Loader2 className="size-8 animate-spin text-amber-600" />
+        </div>
+      }
+    >
+      <DashboardProvider>
+        <LineageTraceContent />
+      </DashboardProvider>
+    </Suspense>
   );
 }

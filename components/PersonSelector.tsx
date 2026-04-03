@@ -55,8 +55,8 @@ export default function PersonSelector({
         `${p.full_name} ${p.other_names || ""} ${p.birth_year || ""}`,
       );
       return searchStr.includes(searchTermLower);
-    })
-    .slice(0, 50);
+    });
+    // Removed .slice(0, 50) to show all matching persons as requested
 
   const handleSelect = (personId: string | null) => {
     onSelect(personId);
