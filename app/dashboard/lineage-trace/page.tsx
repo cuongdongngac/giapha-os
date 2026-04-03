@@ -254,12 +254,27 @@ function LineageTraceContent() {
       try {
         const supabase = createClient();
 
-        // Fetch function without Supabase-side range limits as requested
+        // Helper to fetch all records bypassing the 1000 limit
         async function fetchAll(table: string) {
-          const { data, error } = await supabase.from(table).select("*");
+          let allData: any[] = [];
+          let page = 0;
+          const pageSize = 1000;
+          while (true) {
+            const { data, error } = await supabase
+              .from(table)
+              .select("*")
+              .range(page * pageSize, (page + 1) * pageSize - 1);
 
-          if (error) throw error;
-          return data || [];
+            if (error) throw error;
+            if (data && data.length > 0) {
+              allData = [...allData, ...data];
+              if (data.length < pageSize) break;
+            } else {
+              break;
+            }
+            page++;
+          }
+          return allData;
         }
 
         const pData = await fetchAll("persons");
@@ -449,8 +464,11 @@ function LineageTraceContent() {
                       <span className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] mb-1 block">
                         {getRelationshipTitle(index)}
                       </span>
-                      <h3 className="text-xl font-bold text-stone-900 group-hover:text-amber-700 transition-colors">
+                      <h3 className="text-xl font-bold text-stone-900 group-hover:text-amber-700 transition-colors flex items-center gap-2">
                         {entry.person.full_name}
+                        {index === 0 && (
+                          <Crown className="size-4 text-amber-500 fill-amber-500" />
+                        )}
                       </h3>
                     </div>
                     {entry.person.generation && (

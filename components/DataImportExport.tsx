@@ -28,15 +28,28 @@ export default function DataImportExport() {
         const { createClient } = await import("@/utils/supabase/client");
         const supabase = createClient();
 
-        // Fetch function without Supabase-side range limits as requested
+        // Helper to fetch all records bypassing the 1000 limit
         async function fetchAll() {
-          const { data, error } = await supabase
-            .from("persons")
-            .select("id, full_name, birth_year, gender, avatar_url, generation")
-            .order("birth_year", { ascending: true, nullsFirst: false });
-
-          if (error) throw error;
-          return data || [];
+          let allData: any[] = [];
+          let page = 0;
+          const pageSize = 1000;
+          while (true) {
+            const { data, error } = await supabase
+              .from("persons")
+              .select("id, full_name, birth_year, gender, avatar_url, generation")
+              .order("birth_year", { ascending: true, nullsFirst: false })
+              .range(page * pageSize, (page + 1) * pageSize - 1);
+            
+            if (error) throw error;
+            if (data && data.length > 0) {
+              allData = [...allData, ...data];
+              if (data.length < pageSize) break;
+            } else {
+              break;
+            }
+            page++;
+          }
+          return allData;
         }
 
         const data = await fetchAll();

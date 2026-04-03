@@ -52,23 +52,37 @@ export function useFamilyData(options: UseFamilyDataOptions = {}): UseFamilyData
       
       const supabase = createClient();
 
-      // Fetch function without Supabase-side range limits as requested
+      // Recursive fetch function to ensure we get ALL records regardless of server limits
       async function fetchEverything(table: string) {
+        let allData: any[] = [];
+        let from = 0;
+        let to = 999;
+        const step = 1000;
+        
         console.log(`Starting fetch for ${table}...`);
         
-        const { data, error } = await supabase
-          .from(table)
-          .select("*");
+        while (true) {
+          const { data, error } = await supabase
+            .from(table)
+            .select("*")
+            .range(from, to);
             
-        if (error) {
-          console.error(`Error fetching ${table}:`, error);
-          throw error;
+          if (error) {
+            console.error(`Error fetching ${table} at range ${from}-${to}:`, error);
+            throw error;
+          }
+          
+          if (!data || data.length === 0) break;
+          
+          allData = [...allData, ...data];
+          console.log(`Fetched ${data.length} records from ${table}. Total: ${allData.length}`);
+          
+          if (data.length < step) break; // Last page
+          
+          from += step;
+          to += step;
         }
-        
-        if (!data) return [];
-        
-        console.log(`Fetched ${data.length} records from ${table}.`);
-        return data;
+        return allData;
       }
       
       const allPersons = await fetchEverything("persons");
