@@ -16,6 +16,7 @@ export interface Post {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  pdfurl: string | null;
 }
 
 export async function getPosts(page: number = 1, limit: number = 10, status: string = 'published') {
@@ -30,7 +31,7 @@ export async function getPosts(page: number = 1, limit: number = 10, status: str
   // 4. Adding proper indexes for admin queries
   let query = supabase
     .from("posts")
-    .select("id, title, slug, excerpt, featured_image, author_id, status, published_at, created_at, updated_at", { count: "estimated" });
+    .select("id, title, slug, excerpt, featured_image, author_id, status, published_at, created_at, updated_at, pdfurl", { count: "estimated" });
 
   if (status !== 'all') {
     // Public view: Only published, sorted by published date
@@ -64,7 +65,7 @@ export async function getPostBySlug(slug: string) {
   const supabase = createClient(cookieStore);
   const { data, error } = await supabase
     .from("posts")
-    .select("id, title, slug, excerpt, featured_image, author_id, status, published_at, created_at, updated_at, content") // Explicit fields instead of *
+    .select("id, title, slug, excerpt, featured_image, author_id, status, published_at, created_at, updated_at, content, pdfurl") // Explicit fields instead of *
     .eq("slug", slug)
     .single();
 
@@ -83,7 +84,7 @@ export async function getPostById(id: string) {
   const startTime = performance.now();
   const { data, error } = await supabase
     .from("posts")
-    .select("id, title, slug, excerpt, featured_image, author_id, status, published_at, created_at, updated_at, content") // Explicit fields instead of *
+    .select("id, title, slug, excerpt, featured_image, author_id, status, published_at, created_at, updated_at, content, pdfurl") // Explicit fields instead of *
     .eq("id", id)
     .single();
   const endTime = performance.now();

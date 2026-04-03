@@ -16,7 +16,8 @@ import {
   Globe,
   FileEdit,
   Upload,
-  Trash2
+  Trash2,
+  FileText as PdfIcon
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { createPost, updatePost, Post } from "@/app/actions/posts";
@@ -48,6 +49,10 @@ export default function PostForm({ initialData, isEditing = false, onSuccess, on
   // Image upload states
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(initialData?.featured_image || null);
+
+  // PDF upload states
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(initialData?.pdfurl || null);
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -86,6 +91,20 @@ export default function PostForm({ initialData, isEditing = false, onSuccess, on
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type === "application/pdf") {
+      setPdfFile(file);
+      // Create a temporary URL just for viewing the name or preview state if needed
+      setPdfUrl(URL.createObjectURL(file)); 
+    }
+  };
+
+  const handleRemovePdf = () => {
+    setPdfFile(null);
+    setPdfUrl("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -110,12 +129,29 @@ export default function PostForm({ initialData, isEditing = false, onSuccess, on
         finalImageUrl = publicUrl;
       }
 
+      let finalPdfUrl = pdfUrl;
+      if (pdfFile) {
+        const fileExt = pdfFile.name.split(".").pop();
+        const fileName = `pdf_${Math.random().toString(36).substring(2, 11)}_${Date.now()}.${fileExt}`;
+        const filePath = `pdfs/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("posts")
+          .upload(filePath, pdfFile);
+
+        if (uploadError) throw new Error("Lỗi khi tải PDF lên: " + uploadError.message);
+
+        const { data: { publicUrl } } = supabase.storage.from("posts").getPublicUrl(filePath);
+        finalPdfUrl = publicUrl;
+      }
+
       const formData = {
         title,
         slug,
         content,
         excerpt,
         featured_image: finalImageUrl,
+        pdfurl: finalPdfUrl,
         status,
         published_at: status === 'published' ? (initialData?.published_at || new Date().toISOString()) : null,
       };
@@ -273,6 +309,47 @@ export default function PostForm({ initialData, isEditing = false, onSuccess, on
                   <Trash2 className="size-3.5" /> Gỡ ảnh
                 </button>
               )}
+            </div>
+
+            {/* PDF Upload */}
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-3 flex items-center gap-2">
+                <PdfIcon className="size-4 text-amber-600" />
+                Tài liệu đính kèm (PDF)
+              </label>
+              
+              <div className="flex flex-col gap-2">
+                {pdfUrl || pdfFile ? (
+                   <div className="flex items-center justify-between p-3 bg-stone-50 border border-stone-200 rounded-xl">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="p-2 bg-red-100 text-red-600 rounded-lg">
+                           <PdfIcon className="size-5" />
+                        </div>
+                        <span className="text-sm font-medium text-stone-700 truncate">
+                          {pdfFile ? pdfFile.name : (pdfUrl ? pdfUrl.split('/').pop() : "Tài liệu PDF")}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemovePdf}
+                        className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                        title="Xóa PDF"
+                      >
+                         <Trash2 className="size-4" />
+                      </button>
+                   </div>
+                ) : (
+                  <label className="flex items-center justify-center gap-2 px-4 py-3 bg-stone-50 hover:bg-stone-100 border border-stone-200 border-dashed rounded-xl cursor-pointer transition-colors text-stone-600 text-sm font-medium">
+                    <Upload className="size-4" /> Tải lên PDF
+                    <input 
+                      type="file" 
+                      accept=".pdf,application/pdf" 
+                      onChange={handlePdfChange}
+                      className="hidden" 
+                    />
+                  </label>
+                )}
+              </div>
             </div>
 
             {/* Slug Settings */}

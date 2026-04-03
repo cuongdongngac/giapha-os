@@ -5,6 +5,7 @@ import { useDashboard } from './DashboardContext';
 import { Post, deletePost } from '@/app/actions/posts';
 import PostCard from './PostCard';
 import PostForm from './PostForm';
+import PDFViewer from './PDFViewer';
 import { usePosts } from '@/hooks/usePosts';
 import { 
   FileText, 
@@ -136,6 +137,10 @@ export default function DashboardPostsViewStandalone({ isAdmin, initialPosts, in
             className="rendered-html-content max-w-none text-stone-600 leading-relaxed text-lg"
             dangerouslySetInnerHTML={{ __html: selectedPost.content || "" }}
           />
+
+          {selectedPost.pdfurl && (
+             <PDFViewer url={selectedPost.pdfurl} />
+          )}
         </article>
 
         {/* RELATED POSTS SECTION */}
