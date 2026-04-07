@@ -141,12 +141,22 @@ export default function PersonCard({ person }: PersonCardProps) {
                   <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60 uppercase tracking-widest shadow-xs">
                     <BranchName branchId={person.branch_id} />
                   </span>
-                )}
+                 )}
+               </div>
+             )}
+            {isDeceased && person.tomb_info && (
+              <div className="mt-2.5 pt-2 border-t border-stone-100 flex items-start gap-1.5 min-w-0">
+                <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider shrink-0 mt-0.5">
+                  Mộ phần:
+                </span>
+                <span className="text-[11px] text-stone-600 font-medium truncate italic" title={person.tomb_info}>
+                  {person.tomb_info}
+                </span>
               </div>
             )}
-          </div>
-        </div>
-      </button>
+           </div>
+         </div>
+       </button>
 
       {/* Truy Vết Tổ Tiên Button - Hidden by default, shown on hover */}
       <Link

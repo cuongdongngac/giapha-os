@@ -49,6 +49,7 @@ export interface Person {
   generation: number | null;
   branch_id: number | null;
   other_names: string | null;
+  tomb_info: string | null;
 }
 export interface PersonCard extends Person {
   branches?: BranchOption | null;
