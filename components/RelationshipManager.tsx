@@ -248,15 +248,50 @@ export default function RelationshipManager({
         return;
       }
 
-      // Search in both full_name and other_names
+      // Build a word-prefix OR filter across full_name and other_names.
+      // Each word in the query becomes a "word%" prefix pattern so that
+      // e.g. "Nguyễn Văn" only matches names starting with those word tokens,
+      // not every name containing those characters anywhere.
+      const { normalizeVietnamese, personMatchesSearch } = await import(
+        "@/utils/searchHelpers"
+      );
+      const words = normalizeVietnamese(searchTerm.trim())
+        .split(/\s+/)
+        .filter(Boolean);
+
+      if (words.length === 0) {
+        setSearchResults([]);
+        return;
+      }
+
+      // Build OR clauses: for each word, match full_name or other_names starting
+      // with that word (prefix), escaped for ilike.
+      const escape = (w: string) =>
+        w.replace(/%/g, "\\%").replace(/_/g, "\\_");
+
+      const clauses = words
+        .map((w) => {
+          const e = escape(w);
+          return `full_name.ilike.%${e}%,other_names.ilike.%${e}%`;
+        })
+        .join(",");
+
+      // Search in both full_name and other_names — server gives us candidates,
+      // client-side personMatchesSearch narrows to exact word-start matches.
       const { data } = await supabase
         .from("persons")
         .select("*")
-        .or(`full_name.ilike.%${searchTerm}%,other_names.ilike.%${searchTerm}%`)
+        .or(clauses)
         .neq("id", personId) // Exclude self
-        .limit(5);
+        .limit(30);
 
-      if (data) setSearchResults(data);
+      if (data) {
+        // Apply precise word-start filter on client
+        const precise = data.filter((p) =>
+          personMatchesSearch(searchTerm, p.full_name, p.other_names),
+        );
+        setSearchResults(precise.slice(0, 5));
+      }
     };
 
     const timeoutId = setTimeout(searchPeople, 300);

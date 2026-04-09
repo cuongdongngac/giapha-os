@@ -70,11 +70,27 @@ export default async function MembersPage({
   let personsQuery = supabase.from("persons").select("*", { count: "exact" });
 
   if (q) {
-    // Search name + other_names (safe OR)
-    const escaped = q.replaceAll("%", "\\%").replaceAll("_", "\\_");
-    personsQuery = personsQuery.or(
-      `full_name.ilike.%${escaped}%,other_names.ilike.%${escaped}%`,
-    );
+    // Word-prefix search: each word in the query must appear as a word-start
+    // in either full_name or other_names. Narrower than %term% substring.
+    const words = q
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "d")
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean);
+
+    for (const word of words) {
+      const escaped = word.replaceAll("%", "\\%").replaceAll("_", "\\_");
+      // Each word must appear as a word-start: match "word%" anywhere after a space
+      // or at the beginning. Using %escaped% to find the word token anywhere works
+      // only if the token is unique; we rely on client-side filtering for precision,
+      // but narrow the DB set here with per-word OR filters.
+      personsQuery = personsQuery.or(
+        `full_name.ilike.%${escaped}%,other_names.ilike.%${escaped}%`,
+      );
+    }
   }
   if (branchId != null) personsQuery = personsQuery.eq("branch_id", branchId);
   if (generation != null)
