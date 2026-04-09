@@ -176,6 +176,7 @@ export default function MemberForm({
       // 1. Upsert public data
       const personData = {
         full_name: fullName,
+        other_names: otherNames || null,
         gender,
         birth_year: birthYear === "" ? null : Number(birthYear),
         birth_month: birthMonth === "" ? null : Number(birthMonth),
@@ -195,7 +196,7 @@ export default function MemberForm({
 
         avatar_url: finalAvatarUrl || null,
         note: note || null,
-        tomb_info: isDeceased ? (tombInfo || null) : null,
+        tomb_info: isDeceased ? tombInfo || null : null,
       };
 
       let personId = initialData?.id;
