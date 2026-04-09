@@ -20,6 +20,7 @@ import { FemaleIcon, MaleIcon } from "./GenderIcons";
 interface PersonNode {
   id: string;
   full_name: string;
+  other_names?: string | null;
   gender: "male" | "female" | "other";
   birth_year: number | null;
   birth_order: number | null;
@@ -69,18 +70,15 @@ function PersonSelector({
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
 
-  const filtered = useMemo(
-    () => {
-      return persons
-        .filter(
-          (p) =>
-            p.id !== disabledId &&
-            personMatchesSearch(search, p.full_name, null),
-        )
-        .slice(0, 50); // Increase to 50
-    },
-    [persons, disabledId, search],
-  );
+  const filtered = useMemo(() => {
+    return persons
+      .filter(
+        (p) =>
+          p.id !== disabledId &&
+          personMatchesSearch(search, p.full_name, p.other_names),
+      )
+      .slice(0, 50); // Increase to 50
+  }, [persons, disabledId, search]);
 
   return (
     <div className="w-full flex-1 min-w-0 relative">

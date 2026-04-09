@@ -36,7 +36,7 @@ export default async function KinshipPage() {
     return allData;
   }
 
-  const persons = await fetchAll("persons", "id, full_name, gender, birth_year, birth_order, generation, is_in_law", "birth_year");
+  const persons = await fetchAll("persons", "id, full_name, other_names, gender, birth_year, birth_order, generation, is_in_law", "birth_year");
   const relationships = await fetchAll("relationships", "type, person_a, person_b");
 
   return (
