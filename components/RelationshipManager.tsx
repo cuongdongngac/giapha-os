@@ -4,6 +4,7 @@ import { DashboardContext, useDashboard } from "@/components/DashboardContext";
 import { Person, RelationshipType } from "@/types";
 import { formatDisplayDate } from "@/utils/dateHelpers";
 import { createClient } from "@/utils/supabase/client";
+import { normalizeVietnamese, personMatchesSearch } from "@/utils/searchHelpers";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
@@ -248,45 +249,33 @@ export default function RelationshipManager({
         return;
       }
 
-      // Build a word-prefix OR filter across full_name and other_names.
-      // Each word in the query becomes a "word%" prefix pattern so that
-      // e.g. "Nguyễn Văn" only matches names starting with those word tokens,
-      // not every name containing those characters anywhere.
-      const { normalizeVietnamese, personMatchesSearch } = await import(
-        "@/utils/searchHelpers"
-      );
-      const words = normalizeVietnamese(searchTerm.trim())
+      // Use the first word to fetch candidates broadly from DB,
+      // then narrow client-side with word-start matching.
+      const firstWord = normalizeVietnamese(searchTerm.trim())
         .split(/\s+/)
-        .filter(Boolean);
+        .filter(Boolean)[0];
 
-      if (words.length === 0) {
+      if (!firstWord) {
         setSearchResults([]);
         return;
       }
 
-      // Build OR clauses: for each word, match full_name or other_names starting
-      // with that word (prefix), escaped for ilike.
-      const escape = (w: string) =>
-        w.replace(/%/g, "\\%").replace(/_/g, "\\_");
+      const escaped = firstWord
+        .replaceAll("%", "\\%")
+        .replaceAll("_", "\\_");
 
-      const clauses = words
-        .map((w) => {
-          const e = escape(w);
-          return `full_name.ilike.%${e}%,other_names.ilike.%${e}%`;
-        })
-        .join(",");
-
-      // Search in both full_name and other_names — server gives us candidates,
-      // client-side personMatchesSearch narrows to exact word-start matches.
+      // Fetch candidates matching at least the first word in either field
       const { data } = await supabase
         .from("persons")
         .select("*")
-        .or(clauses)
-        .neq("id", personId) // Exclude self
-        .limit(30);
+        .or(
+          `full_name.ilike.%${escaped}%,other_names.ilike.%${escaped}%`,
+        )
+        .neq("id", personId)
+        .limit(50);
 
       if (data) {
-        // Apply precise word-start filter on client
+        // Apply precise word-start filter on client (checks all query words)
         const precise = data.filter((p) =>
           personMatchesSearch(searchTerm, p.full_name, p.other_names),
         );
