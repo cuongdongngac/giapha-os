@@ -13,10 +13,13 @@ export function normalizeVietnamese(str: string): string {
 }
 
 /**
- * Checks whether a person's name fields match a search query using word-start matching.
- * Each word in the query must match the beginning of at least one word in
- * the combined full_name + other_names string. This is narrower than a plain
- * substring search (e.g. "an" will NOT match "Thanh" but WILL match "An Bình").
+ * Checks whether a person's name fields match a search query.
+ * Uses AND logic across query words: every word in the query must appear
+ * as a substring somewhere in the combined full_name + other_names.
+ *
+ * This is narrower than the old single-term search (which used %fullQuery%
+ * as one chunk), because with multi-word queries ALL words must be present,
+ * regardless of their order in the name.
  *
  * @param query      The raw search string typed by the user.
  * @param fullName   The person's full_name field.
@@ -30,15 +33,10 @@ export function personMatchesSearch(
   const q = normalizeVietnamese(query.trim());
   if (!q) return true; // empty query → show all
 
-  // Tokenize the combined name into words
-  const nameStr = normalizeVietnamese(
-    `${fullName} ${otherNames ?? ""}`,
-  );
-  const nameWords = nameStr.split(/\s+/).filter(Boolean);
+  // Normalize the combined name once
+  const nameStr = normalizeVietnamese(`${fullName} ${otherNames ?? ""}`);
 
-  // Every query word must be a prefix of at least one name word
+  // Every query word must appear somewhere in the combined name (AND logic)
   const queryWords = q.split(/\s+/).filter(Boolean);
-  return queryWords.every((qw) =>
-    nameWords.some((nw) => nw.startsWith(qw)),
-  );
+  return queryWords.every((qw) => nameStr.includes(qw));
 }
