@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { createPost, updatePost, Post } from "@/app/actions/posts";
+import { clearGlobalPostsCache } from "@/hooks/usePosts";
 import { createClient } from "@/utils/supabase/client";
 
 interface PostFormProps {
@@ -159,9 +160,11 @@ export default function PostForm({ initialData, isEditing = false, onSuccess, on
       if (isEditing && initialData) {
         const result = await updatePost(initialData.id, formData);
         if (result.error) throw new Error(result.error);
+        clearGlobalPostsCache(initialData.id);
       } else {
         const result = await createPost(formData);
         if (result.error) throw new Error(result.error);
+        clearGlobalPostsCache();
       }
       
       if (onSuccess) {

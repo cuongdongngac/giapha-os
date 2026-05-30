@@ -39,10 +39,8 @@ export async function getPosts(page: number = 1, limit: number = 10, status: str
       .eq("status", status)
       .order("published_at", { ascending: false, nullsFirst: false });
   } else {
-    // Admin view: All posts, but prioritize published posts for better UX
-    // Sort by status first, then by updated_at for better workflow
+    // Admin view: All posts, sort by updated_at to see recently edited drafts first
     query = query
-      .order("status", { ascending: false }) // Published first, then drafts
       .order("updated_at", { ascending: false, nullsFirst: false });
   }
 

@@ -24,10 +24,18 @@ interface UsePostsReturn {
   clearCache: () => void;
 }
 
-// Global cache for posts data with different cache keys for admin vs public
 let postsCache: Map<string, { data: Post[]; count: number; timestamp: number }> = new Map();
 let postDetailCache: Map<string, { data: Post; timestamp: number }> = new Map();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+export function clearGlobalPostsCache(postId?: string) {
+  if (postId) {
+    postDetailCache.delete(postId);
+  } else {
+    postDetailCache.clear();
+  }
+  postsCache.clear();
+}
 
 function isCacheValid(timestamp: number): boolean {
   return Date.now() - timestamp < CACHE_DURATION;

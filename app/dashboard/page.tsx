@@ -62,7 +62,6 @@ export default async function FamilyTreePage({ searchParams }: PageProps) {
         .order("published_at", { ascending: false, nullsFirst: false });
     } else {
       query = query
-        .order("status", { ascending: false })
         .order("updated_at", { ascending: false, nullsFirst: false });
     }
 
