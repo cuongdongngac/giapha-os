@@ -34,6 +34,7 @@ export default function DashboardPostsViewStandalone({ isAdmin, initialPosts, in
 
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string>(isAdmin ? 'all' : 'published');
 
   // Use the optimized posts hook with caching
   const {
@@ -48,10 +49,10 @@ export default function DashboardPostsViewStandalone({ isAdmin, initialPosts, in
   } = usePosts({
     page: 1,
     limit: 10,
-    status: isAdmin ? 'all' : 'published',
+    status: filterStatus,
     autoLoad: true,
-    initialPosts,
-    initialCount: initialPostsCount,
+    initialPosts: filterStatus === (isAdmin ? 'all' : 'published') ? initialPosts : undefined,
+    initialCount: filterStatus === (isAdmin ? 'all' : 'published') ? initialPostsCount : undefined,
   });
 
   // Load selected post detail using cached function
@@ -209,13 +210,27 @@ export default function DashboardPostsViewStandalone({ isAdmin, initialPosts, in
         </div>
         
         {isAdmin && (
-          <button
-            onClick={() => setIsCreatingPost(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 text-white rounded-full font-bold text-sm hover:bg-amber-700 transition-all shadow-lg shadow-amber-600/20 active:scale-95"
-          >
-            <Plus className="size-4" />
-            Tạo bài viết
-          </button>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <select
+              value={filterStatus}
+              onChange={(e) => {
+                setFilterStatus(e.target.value);
+                setPage(1);
+              }}
+              className="bg-white border border-stone-200 text-stone-600 rounded-full px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all shadow-sm"
+            >
+              <option value="all">Tất cả bài viết</option>
+              <option value="published">Đã xuất bản (Public)</option>
+              <option value="draft">Bản nháp (Draft)</option>
+            </select>
+            <button
+              onClick={() => setIsCreatingPost(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 text-white rounded-full font-bold text-sm hover:bg-amber-700 transition-all shadow-lg shadow-amber-600/20 active:scale-95"
+            >
+              <Plus className="size-4" />
+              Tạo bài viết
+            </button>
+          </div>
         )}
       </div>
 
