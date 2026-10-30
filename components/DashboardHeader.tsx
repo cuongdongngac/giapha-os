@@ -1,5 +1,6 @@
 import config from "@/app/config";
 import HeaderMenu from "@/components/HeaderMenu";
+import InstallAppButton from "@/components/InstallAppButton";
 import Link from "next/link";
 import React from "react";
 
@@ -26,7 +27,8 @@ export default function DashboardHeader({
         </Link>
         <div className="flex items-center justify-between py-2">
           <div className="flex items-center gap-4">{children}</div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <InstallAppButton />
             <HeaderMenu isAdmin={isAdmin} userEmail={userEmail} />
           </div>
         </div>

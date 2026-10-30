@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { BookOpen, FileText, Home, LogIn } from "lucide-react";
+import InstallAppButton from "@/components/InstallAppButton";
 
 export default function PublicHeader() {
   const pathname = usePathname();
@@ -44,7 +45,8 @@ export default function PublicHeader() {
           })}
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <InstallAppButton />
           <Link
             href="/login"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white rounded-xl text-sm font-bold hover:bg-stone-800 transition-all shadow-lg shadow-stone-900/10 active:scale-95"

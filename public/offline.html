@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f59e0b">
+<title>Mất kết nối – Họ Phạm Đông Ngạc</title>
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+       font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#fafaf9;color:#1c1917}
+  .box{max-width:340px;padding:32px;text-align:center;background:rgba(255,255,255,.7);border-radius:24px;
+       box-shadow:0 8px 30px rgb(0 0 0 / .04)}
+  img{width:72px;height:72px;border-radius:16px}
+  h1{font-family:Georgia,"Times New Roman",serif;font-size:22px;margin:16px 0 8px}
+  p{color:#57534e;font-size:15px;line-height:1.5;margin:0 0 20px}
+  button{background:#f59e0b;color:#fff;border:0;border-radius:999px;padding:10px 22px;font-weight:600;font-size:15px}
+</style>
+</head>
+<body>
+<div class="box">
+  <img src="/icons/icon-192x192.png" alt="">
+  <h1>Đang mất kết nối mạng</h1>
+  <p>Gia phả cần Internet để tải dữ liệu. Khi có mạng lại, trang sẽ tự mở lại.</p>
+  <button onclick="location.reload()">Thử lại</button>
+</div>
+<script>addEventListener("online",function(){location.reload()})</script>
+</body>
+</html>

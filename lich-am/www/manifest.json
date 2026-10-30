@@ -1,9 +1,0 @@
-{
-  "name": "Lịch Âm Dòng Họ",
-  "short_name": "Lịch Họ",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#fbf7ef",
-  "theme_color": "#2f5d45",
-  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
-}

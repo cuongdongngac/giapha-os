@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import config from "./config";
 import "./globals.css";
 import "../styles/tiptap.css";
+import PwaRegister from "@/components/PwaRegister";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -44,6 +45,7 @@ export const metadata: Metadata = {
       { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [
+      { url: "/icons/apple-touch-icon-180x180.png", sizes: "180x180", type: "image/png" },
       { url: "/icons/icon-152x152.png", sizes: "152x152", type: "image/png" },
     ],
   },
@@ -78,8 +80,8 @@ export default function RootLayout({
         <meta name="msapplication-config" content="/browserconfig.xml" />
         <link
           rel="apple-touch-icon"
-          sizes="152x152"
-          href="/icons/icon-152x152.png"
+          sizes="180x180"
+          href="/icons/apple-touch-icon-180x180.png"
         />
         <link
           rel="icon"
@@ -98,6 +100,7 @@ export default function RootLayout({
         className={`${inter.variable} ${playfair.variable} font-sans antialiased relative`}
       >
         {children}
+        <PwaRegister />
       </body>
     </html>
   );
