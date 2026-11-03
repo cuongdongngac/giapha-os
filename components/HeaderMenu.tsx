@@ -15,6 +15,8 @@ import {
   Users,
   FileText,
   FileEdit,
+  Images,
+  CircleHelp,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -122,6 +124,14 @@ export default function HeaderMenu({ isAdmin, userEmail }: HeaderMenuProps) {
                 Sự kiện
               </Link>
               <Link
+                href="/dashboard/gallery"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+              >
+                <Images className="size-4" />
+                Thư viện ảnh
+              </Link>
+              <Link
                 href="/dashboard/kinship"
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-amber-700 hover:bg-amber-50 transition-colors"
@@ -175,6 +185,16 @@ export default function HeaderMenu({ isAdmin, userEmail }: HeaderMenuProps) {
                 <Info className="size-4" />
                 Giới thiệu & Liên hệ
               </Link>
+              <a
+                href="/help/"
+                target="_blank"
+                rel="noopener"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-stone-700 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+              >
+                <CircleHelp className="size-4" />
+                Hướng dẫn sử dụng
+              </a>
               {userEmail ? (
                 <LogoutButton />
               ) : (

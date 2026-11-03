@@ -43,3 +43,8 @@ next-env.d.ts
 .agents/
 .agent/
 skills-lock.json
+
+# trang hướng dẫn: build tự sinh (npm run help:build)
+/public/help
+/help/.vitepress/cache
+/help/.vitepress/dist

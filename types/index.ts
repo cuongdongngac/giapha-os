@@ -75,3 +75,26 @@ export interface BranchOption {
   id: number
   name: string
 }
+// ===== Thư viện ảnh (Gallery) =====
+export interface GalleryItem {
+  id: string;
+  title: string;
+  description: string | null;
+  image_url: string;
+  storage_path: string | null;
+  width: number | null;
+  height: number | null;
+  album: string | null;
+  event_date: string | null; // YYYY-MM-DD
+  branch_id: number | null;
+  person_ids: string[];
+  is_public: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GalleryPersonRef {
+  id: string;
+  full_name: string;
+}

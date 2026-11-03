@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "vitepress build help && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "help:dev": "vitepress dev help",
+    "help:build": "vitepress build help"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
@@ -54,7 +56,8 @@
     "eslint": "^9.39.3",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4.2.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitepress": "^1.6.4"
   },
   "ignoreScripts": [
     "sharp",

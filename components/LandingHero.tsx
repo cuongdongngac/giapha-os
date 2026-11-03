@@ -3,6 +3,7 @@
 import { motion, Variants } from "framer-motion";
 import {
   ArrowRight,
+  CircleHelp,
   Network,
   ShieldCheck,
   Sparkles,
@@ -75,6 +76,16 @@ export default function LandingHero({ siteName }: LandingHeroProps) {
               <Users className="size-5 group-hover:scale-110 transition-transform" />
             </span>
           </Link>
+        </motion.div>
+
+        <motion.div className="-mt-6" variants={fadeIn}>
+          <a
+            href="/help/"
+            className="inline-flex items-center gap-2 text-base font-medium text-amber-700 hover:text-amber-900 hover:underline"
+          >
+            <CircleHelp className="size-5" />
+            Hướng dẫn sử dụng (cho người mới)
+          </a>
         </motion.div>
 
         <motion.div

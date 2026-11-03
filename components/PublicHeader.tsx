@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { BookOpen, FileText, Home, LogIn } from "lucide-react";
+import { BookOpen, CircleHelp, FileText, Home, Images, LogIn } from "lucide-react";
 import InstallAppButton from "@/components/InstallAppButton";
 
 export default function PublicHeader() {
@@ -12,7 +12,9 @@ export default function PublicHeader() {
   const navItems = [
     { href: "/", label: "Trang chủ", icon: <Home className="size-4" /> },
     { href: "/dashboard?view=posts", label: "Bài viết", icon: <FileText className="size-4" /> },
+    { href: "/dashboard/gallery", label: "Thư viện ảnh", icon: <Images className="size-4" /> },
     { href: "/about", label: "Giới thiệu", icon: <BookOpen className="size-4" /> },
+    { href: "/help/", label: "Hướng dẫn", icon: <CircleHelp className="size-4" /> },
   ];
 
   return (
@@ -28,8 +30,10 @@ export default function PublicHeader() {
         <nav className="hidden md:flex items-center gap-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
+            // Trang hướng dẫn là trang tĩnh (VitePress) nên dùng thẻ <a> thường
+            const Tag = item.href.startsWith("/help") ? "a" : Link;
             return (
-              <Link
+              <Tag
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${
@@ -40,7 +44,7 @@ export default function PublicHeader() {
               >
                 {item.icon}
                 {item.label}
-              </Link>
+              </Tag>
             );
           })}
         </nav>

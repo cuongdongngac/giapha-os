@@ -57,13 +57,12 @@ export async function updateSession(request: NextRequest) {
     "/dashboard/members/[id]/edit",
     "/dashboard/lineage",
   ];
+  // Khớp đúng đoạn đường dẫn: "/dashboard/lineage" KHÔNG được khớp nhầm
+  // "/dashboard/lineage-search" hay "/dashboard/lineage-trace" (hai trang này công khai).
+  const pathname = request.nextUrl.pathname.replace(/\/+$/, "") || "/";
   const isProtectedPath = protectedPaths.some((path) => {
-    if (path.includes("[id]")) {
-      // Handle dynamic route for edit
-      const regex = new RegExp(path.replace("[id]", "[^/]+") + "$");
-      return regex.test(request.nextUrl.pathname);
-    }
-    return request.nextUrl.pathname.startsWith(path);
+    const pattern = "^" + path.replace("[id]", "[^/]+") + "(?:/.*)?$";
+    return new RegExp(pattern).test(pathname);
   });
 
   const isLoginPage = request.nextUrl.pathname.startsWith("/login");

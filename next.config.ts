@@ -13,6 +13,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Trang hướng dẫn (VitePress build ra public/help): /help -> trang đầu hướng dẫn.
+  async rewrites() {
+    return [{ source: "/help", destination: "/help/index.html" }];
+  },
+  // Phòng hờ: router VitePress có thể gắn đuôi .html vào link /dashboard.
+  async redirects() {
+    return [{ source: "/dashboard.html", destination: "/dashboard", permanent: false }];
+  },
   async headers() {
     return [
       {
