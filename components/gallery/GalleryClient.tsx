@@ -138,7 +138,7 @@ export default function GalleryClient({
         width={item.width ?? undefined}
         height={item.height ?? undefined}
         className={`w-full transition-transform duration-500 group-hover:scale-105 ${
-          tall ? "h-auto" : "aspect-4/3 object-cover"
+          tall ? "h-auto" : "aspect-4/3 object-cover object-center"
         }`}
       />
       {!item.is_public && (
@@ -301,7 +301,9 @@ export default function GalleryClient({
           )}
         </div>
       ) : viewMode === "grid" ? (
-        <div className="columns-2 md:columns-3 xl:columns-4 gap-4">{filtered.map((i) => card(i, true))}</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+          {filtered.map((i) => card(i))}
+        </div>
       ) : (
         <div className="space-y-10">
           {timeline.map(([year, list]) => (
