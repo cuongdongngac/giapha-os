@@ -7,6 +7,7 @@
     "build": "vitepress build help && next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --test utils/auth/isPreRegisteredUser.test.ts",
     "help:dev": "vitepress dev help",
     "help:build": "vitepress build help"
   },

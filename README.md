@@ -126,6 +126,39 @@ Sau khi cài đặt xong, nếu bạn gặp lỗi `Failed to fetch` khi đăng k
 
 ---
 
+## Đăng nhập bằng Google
+
+Hệ thống hỗ trợ đăng nhập bằng tài khoản Google qua Supabase OAuth. Lưu ý quan trọng: **chỉ email đã được admin tạo trước** trong hệ thống mới đăng nhập được bằng Google; email lạ sẽ bị từ chối kèm thông báo liên hệ quản trị viên.
+
+### Bước 1: Tạo OAuth Client trên Google Cloud
+
+1. Vào [Google Cloud Console](https://console.cloud.google.com/) → tạo Project mới (hoặc dùng Project sẵn có).
+2. Vào **APIs & Services → OAuth consent screen**: chọn loại External, điền tên ứng dụng, email hỗ trợ, email developer → Save. Nếu app đang ở chế độ Testing, nhớ thêm email người dùng vào mục **Test users**.
+3. Vào **APIs & Services → Credentials → Create Credentials → OAuth client ID**:
+   - Application type: **Web application**
+   - **Authorized redirect URIs**: thêm `https://<project-ref>.supabase.co/auth/v1/callback` (thay `<project-ref>` bằng mã dự án Supabase của bạn, xem trong Supabase Dashboard → Project Settings → API).
+4. Lưu lại **Client ID** và **Client secret**.
+
+### Bước 2: Bật Google Provider trên Supabase
+
+1. Vào [Supabase Dashboard](https://supabase.com/dashboard) → chọn Project của bạn.
+2. Vào **Authentication → Providers → Google**: bật **Enable**, dán Client ID và Client secret ở bước 1 → Save.
+
+### Bước 3: Cấu hình Redirect URL
+
+1. Vào **Authentication → URL Configuration**.
+2. Ở mục **Redirect URLs**, nhấn **Add URL** và thêm:
+   - `https://<domain-của-bạn>/auth/callback`
+   - `http://localhost:3000/auth/callback` (nếu chạy local)
+3. Nhấn **Save**.
+
+### Ghi chú
+
+- Tài khoản Google lạ (email chưa được admin tạo trước) sẽ thấy thông báo và không vào được hệ thống. Nếu bạn cấu hình thêm biến môi trường `SUPABASE_SERVICE_ROLE_KEY`, hệ thống sẽ tự xoá tài khoản nháp do OAuth sinh ra; nếu không có key này, tài khoản nháp vẫn bị chặn ở mọi lần đăng nhập sau.
+- Muốn chặn cứng hơn ở tầng Supabase: vào **Authentication → Sign In / Up**, tắt **Allow new users to sign up**. Cách này không ảnh hưởng đăng nhập của tài khoản đã có, cũng không ảnh hưởng chức năng admin tạo tài khoản trong hệ thống.
+
+---
+
 ## Phân quyền người dùng (User Roles)
 
 Hệ thống có 3 cấp độ phân quyền để dễ dàng quản lý ai được phép cập nhật gia phả:

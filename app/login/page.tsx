@@ -6,10 +6,39 @@ import { createClient } from "@/utils/supabase/client";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Info, KeyRound, Mail, Shield } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
-export default function LoginPage() {
+const LOGIN_ERRORS: Record<string, string> = {
+  "not-registered":
+    "Email Google này chưa được đăng ký trong hệ thống. Vui lòng liên hệ quản trị viên để được tạo tài khoản.",
+  oauth: "Đăng nhập bằng Google thất bại. Vui lòng thử lại.",
+};
+
+function GoogleIcon() {
+  return (
+    <svg className="size-5" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z"
+      />
+    </svg>
+  );
+}
+
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,8 +56,15 @@ export default function LoginPage() {
     }
   }, []);
 
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = useMemo(() => createClient(), []);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const queryErrorCode = searchParams.get("error");
+  const queryErrorMessage = queryErrorCode
+    ? (LOGIN_ERRORS[queryErrorCode] ?? null)
+    : null;
+  const displayError = error ?? queryErrorMessage;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,10 +83,35 @@ export default function LoginPage() {
         // Use window.location.href to bypass Next.js Client Router Cache that might hold a stale redirect from middleware
         window.location.href = "/dashboard";
       }
-    } catch (err: any) {
+    } catch {
       setError("Có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    setError(null);
+
+    try {
+      const redirectTo = new URL("/auth/callback", window.location.origin);
+      const next = searchParams.get("next");
+      if (next) redirectTo.searchParams.set("next", next);
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: redirectTo.toString() },
+      });
+
+      if (error) {
+        setError(error.message);
+        setGoogleLoading(false);
+      }
+      // Thành công: trình duyệt chuyển sang Google, không cần tắt loading.
+    } catch {
+      setError("Có lỗi xảy ra. Vui lòng thử lại.");
+      setGoogleLoading(false);
     }
   };
 
@@ -150,14 +211,14 @@ export default function LoginPage() {
             </div>
 
             <AnimatePresence>
-              {error && (
+              {displayError && (
                 <motion.div
                   initial={{ opacity: 0, y: -10, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: "auto" }}
                   exit={{ opacity: 0, y: -10, height: 0 }}
                   className="text-red-700 text-[13px] text-center bg-red-50 p-3 rounded-xl border border-red-100/50 font-medium"
                 >
-                  {error}
+                  {displayError}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -186,6 +247,44 @@ export default function LoginPage() {
                   </span>
                 ) : (
                   "Đăng nhập"
+                )}
+              </button>
+
+              <div className="flex items-center gap-3 text-stone-400">
+                <span className="h-px flex-1 bg-stone-200" />
+                <span className="text-xs font-semibold uppercase tracking-wider">
+                  Hoặc
+                </span>
+                <span className="h-px flex-1 bg-stone-200" />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={loading || googleLoading}
+                className="group w-full flex justify-center items-center gap-2.5 py-3.5 px-4 text-[15px] font-bold rounded-xl text-stone-800 bg-white hover:bg-stone-50 border border-stone-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-70 disabled:cursor-wait transition-all duration-300 shadow-sm hover:shadow-md"
+              >
+                {googleLoading ? (
+                  <span className="flex items-center gap-2.5">
+                    <svg
+                      className="animate-spin -ml-1 h-4 w-4 text-stone-600"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Đang chuyển sang Google...
+                  </span>
+                ) : (
+                  <>
+                    <GoogleIcon />
+                    Đăng nhập bằng Google
+                  </>
                 )}
               </button>
 
@@ -220,5 +319,19 @@ export default function LoginPage() {
 
       <Footer className="bg-transparent relative z-10 border-none mt-auto" />
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
+          <p className="text-sm font-medium text-stone-500">Đang tải...</p>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

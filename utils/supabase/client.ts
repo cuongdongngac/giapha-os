@@ -14,10 +14,15 @@ export const createClient = () => {
           data: null,
           error: new Error("Missing Supabase configuration"),
         }),
+        signInWithOAuth: async () => ({
+          data: null,
+          error: new Error("Missing Supabase configuration"),
+        }),
         signUp: async () => ({
           data: null,
           error: new Error("Missing Supabase configuration"),
         }),
+        signOut: async () => ({ error: null }),
       },
     } as unknown as SupabaseClient;
   }
